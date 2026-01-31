@@ -50,8 +50,8 @@ include = ["tick*"]
 [tool.setuptools.package-data]
 tick = ["templates/**/*.yaml", "templates/**/*.j2"]
 
-[tool.uv]
-dev-dependencies = [
+[dependency-groups]
+dev = [
     "pytest>=8.0",
     "pytest-cov>=4.0",
     "pytest-mock>=3.12",
