@@ -11,7 +11,7 @@ build/
 dist/
 *.egg-info/
 
-reports/
+/reports/
 session-*.json
 session-index.json
 
