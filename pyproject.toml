@@ -36,9 +36,9 @@ dependencies = [
 tick = "tick.__main__:main"
 
 [project.urls]
-Documentation = "https://github.com/your-org/tick#readme"
-Repository = "https://github.com/your-org/tick"
-Issues = "https://github.com/your-org/tick/issues"
+Documentation = "https://github.com/kylemorelock/tick#readme"
+Repository = "https://github.com/kylemorelock/tick"
+Issues = "https://github.com/kylemorelock/tick/issues"
 
 [tool.setuptools]
 package-dir = { "" = "src" }
