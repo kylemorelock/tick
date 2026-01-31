@@ -1,0 +1,34 @@
+checklist:
+  name: "Web Application QA Checklist"
+  version: "1.0.0"
+  domain: "web"
+  metadata:
+    author: "QA Team"
+    tags: ["web", "smoke"]
+    estimated_time: "1 hour"
+  variables:
+    app_url:
+      prompt: "Application URL"
+      required: true
+    environment:
+      prompt: "Environment"
+      options: ["dev", "staging", "prod"]
+  sections:
+    - name: "Authentication"
+      items:
+        - id: "auth-001"
+          check: "Verify password complexity requirements"
+          severity: "critical"
+          guidance: "Try weak passwords and confirm they are rejected."
+          evidence_required: true
+        - id: "auth-002"
+          check: "Confirm logout clears session"
+          severity: "high"
+    - name: "Navigation"
+      items:
+        - id: "nav-001"
+          check: "Verify primary navigation links are reachable"
+          severity: "medium"
+        - id: "nav-002"
+          check: "Check 404 page for invalid routes"
+          severity: "low"

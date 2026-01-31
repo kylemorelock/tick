@@ -1,0 +1,12 @@
+---
+description: Pytest patterns for tick
+globs: tests/**/*.py
+alwaysApply: false
+---
+
+# Test patterns
+
+- Use pytest with `tmp_path` for file IO.
+- Prefer fixtures for checklist/session setup.
+- When testing CLI commands, assert `typer.Exit` and exit codes.
+- Keep tests deterministic; avoid wall-clock dependencies unless needed.

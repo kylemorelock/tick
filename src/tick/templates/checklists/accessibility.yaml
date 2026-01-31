@@ -1,0 +1,25 @@
+checklist:
+  name: "Accessibility QA Checklist"
+  version: "1.0.0"
+  domain: "web"
+  metadata:
+    author: "QA Team"
+    tags: ["accessibility", "a11y"]
+    estimated_time: "1 hour"
+  sections:
+    - name: "Keyboard Navigation"
+      items:
+        - id: "a11y-001"
+          check: "Verify all interactive elements are reachable via keyboard"
+          severity: "high"
+        - id: "a11y-002"
+          check: "Ensure focus indicators are visible"
+          severity: "medium"
+    - name: "Screen Readers"
+      items:
+        - id: "a11y-003"
+          check: "Confirm form inputs have accessible labels"
+          severity: "high"
+        - id: "a11y-004"
+          check: "Verify landmark regions are announced"
+          severity: "medium"

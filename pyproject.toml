@@ -1,0 +1,106 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "tick"
+version = "0.1.0"
+description = "tick - A CLI tool for QA engineers to execute configurable testing checklists"
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.12"
+authors = [{ name = "Tick Contributors" }]
+keywords = ["qa", "checklists", "testing", "cli", "reporting"]
+classifiers = [
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Software Development :: Testing",
+]
+dependencies = [
+    "typer>=0.12.0",
+    "rich>=13.7.0",
+    "ruamel.yaml>=0.18",
+    "msgspec>=0.18",
+    "pydantic>=2.5",
+    "jinja2>=3.1",
+    "fastjsonschema>=2.19",
+    "attrs>=23.2",
+    "structlog>=24.1",
+]
+
+[project.scripts]
+tick = "tick.__main__:main"
+
+[project.urls]
+Documentation = "https://github.com/your-org/tick#readme"
+Repository = "https://github.com/your-org/tick"
+Issues = "https://github.com/your-org/tick/issues"
+
+[tool.setuptools]
+package-dir = { "" = "src" }
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["tick*"]
+
+[tool.setuptools.package-data]
+tick = ["templates/**/*.yaml", "templates/**/*.j2"]
+
+[tool.uv]
+dev-dependencies = [
+    "pytest>=8.0",
+    "pytest-cov>=4.0",
+    "pytest-mock>=3.12",
+    "pytest-xdist>=3.5",
+    "pytest-randomly>=3.15",
+    "pytest-benchmark>=4.0",
+    "hypothesis>=6.98",
+    "syrupy>=4.6",
+    "ruff>=0.2.0",
+    "mypy>=1.8",
+    "pre-commit>=3.6",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-v -n auto --cov=src/tick --cov-report=term-missing --cov-fail-under=90"
+markers = [
+    "unit: Unit tests (fast, isolated)",
+    "integration: Integration tests (slower, real I/O)",
+    "e2e: End-to-end tests (full workflows)",
+]
+filterwarnings = [
+    "ignore:Benchmarks are automatically disabled.*:pytest_benchmark.logger.PytestBenchmarkWarning",
+]
+
+[tool.coverage.run]
+branch = true
+source = ["src/tick"]
+parallel = true
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "if TYPE_CHECKING:",
+    "raise NotImplementedError",
+    "@overload",
+]
+
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "W", "UP", "B", "C4", "PT", "SIM", "RUF", "PERF", "FURB"]
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+warn_return_any = true
+warn_unused_configs = true
+enable_error_code = ["ignore-without-code", "redundant-cast", "truthy-bool"]

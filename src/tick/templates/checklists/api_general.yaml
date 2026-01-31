@@ -1,0 +1,32 @@
+checklist:
+  name: "API QA Checklist"
+  version: "1.0.0"
+  domain: "api"
+  metadata:
+    author: "QA Team"
+    tags: ["api", "smoke"]
+    estimated_time: "45 minutes"
+  variables:
+    base_url:
+      prompt: "API base URL"
+      required: true
+    environment:
+      prompt: "Environment"
+      options: ["dev", "staging", "prod"]
+  sections:
+    - name: "Authentication"
+      items:
+        - id: "api-auth-001"
+          check: "Verify invalid tokens are rejected"
+          severity: "critical"
+        - id: "api-auth-002"
+          check: "Ensure token expiry is enforced"
+          severity: "high"
+    - name: "Rate Limiting"
+      items:
+        - id: "api-rate-001"
+          check: "Verify rate limit response headers"
+          severity: "medium"
+        - id: "api-rate-002"
+          check: "Confirm burst traffic triggers 429"
+          severity: "medium"

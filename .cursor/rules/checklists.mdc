@@ -1,0 +1,16 @@
+---
+description: Checklist YAML schema guidance
+globs: **/*.yaml
+alwaysApply: false
+---
+
+# Checklist YAML
+
+- Top-level key is `checklist` with `name`, `version`, `domain`, `sections`.
+- `metadata` supports `author`, `tags`, `estimated_time`.
+- `variables` entries require `prompt`; `options` are strings; `default` is a string.
+- Items require `id` and `check`; optional `severity`, `guidance`, `evidence_required`,
+  `condition`, `matrix`.
+- `severity` values are `low`, `medium`, `high`, `critical` (default `medium`).
+- `matrix` entries are mappings of string -> string.
+- `condition` supports simple boolean expressions (`==`, `!=`, `in`, `and`, `or`, `not`).

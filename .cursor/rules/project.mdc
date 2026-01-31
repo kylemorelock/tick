@@ -1,0 +1,15 @@
+---
+description: Core product context for tick
+alwaysApply: true
+---
+
+# Tick project context
+
+- CLI entrypoint is `tick` (Typer + Rich) under `src/tick/cli`.
+- Primary commands: `run`, `validate`, `report`, `init`, `templates`.
+- Runs create session JSON files in `reports/session-<id>.json`.
+- Reports support `html`, `json`, and `md/markdown` outputs.
+- Checklists are YAML with a top-level `checklist` object.
+- CLI errors should be clear and user-facing (`typer.Exit(code=1)` + Rich console).
+- Prefer `Path` and explicit `utf-8` when reading/writing files.
+- Keep docs aligned with real CLI options and schema behavior.

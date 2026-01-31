@@ -1,0 +1,12 @@
+---
+description: Documentation style for tick
+globs: **/*.md
+alwaysApply: false
+---
+
+# Documentation style
+
+- Use short sections with concrete CLI examples.
+- Prefer `uv run tick ...` in setup/quickstart; use `tick ...` in CLI reference.
+- Keep schema examples consistent with `docs/checklist-schema.md`.
+- Update docs whenever CLI options or outputs change.

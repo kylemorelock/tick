@@ -1,0 +1,13 @@
+---
+description: Python conventions for tick
+globs: **/*.py
+alwaysApply: false
+---
+
+# Python conventions
+
+- Use type hints and explicit return types; keep code mypy/ruff friendly.
+- Prefer `Path` over raw strings for filesystem paths.
+- In CLI commands, validate early and fail with `typer.Exit(code=1)`.
+- Persist sessions via `encode_session`/`decode_session` and `SessionStore`.
+- Avoid heavy imports in `src/tick/cli/app.py` and `src/tick/__main__.py` so `--help` stays fast.

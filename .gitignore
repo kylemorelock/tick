@@ -1,0 +1,24 @@
+.coverage
+.coverage.*
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.venv/
+__pycache__/
+*.pyc
+
+build/
+dist/
+*.egg-info/
+
+reports/
+session-*.json
+session-index.json
+
+# Ignore user-created checklists/answers by default
+*.yaml
+*.yml
+!/.github/workflows/*.yaml
+!/.github/workflows/*.yml
+!/src/tick/templates/checklists/*.yaml
+!/src/tick/templates/checklists/*.yml
