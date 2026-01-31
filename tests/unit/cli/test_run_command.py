@@ -61,7 +61,7 @@ checklist:
 def test_load_answers_returns_empty_for_non_mapping(tmp_path: Path):
     path = tmp_path / "answers.yaml"
     path.write_text("- item", encoding="utf-8")
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match=r"mapping"):
         _load_answers(path)
 
 
@@ -253,7 +253,9 @@ def test_run_command_breaks_on_none_current_item(monkeypatch, tmp_path: Path):
         return sequence.pop(0)
 
     monkeypatch.setattr(run_module, "ask_variables", lambda variables, console: {})
-    monkeypatch.setattr(run_module, "ask_item_response", lambda *args, **kwargs: (ItemResult.PASS, None, []))
+    monkeypatch.setattr(
+        run_module, "ask_item_response", lambda *args, **kwargs: (ItemResult.PASS, None, [])
+    )
     monkeypatch.setattr(run_module.ExecutionEngine, "current_item", property(fake_current_item))
 
     run_command(

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from tick.core.models.checklist import Checklist, ChecklistDocument, compute_checklist_digest
 from tick.core.models.enums import ItemResult, SessionStatus
@@ -26,7 +26,7 @@ def test_session_encode_decode_roundtrip():
     response = Response(
         item_id="item-1",
         result=ItemResult.PASS,
-        answered_at=datetime.now(timezone.utc),
+        answered_at=datetime.now(UTC),
         notes="ok",
         evidence=("log.txt",),
     )
@@ -34,7 +34,7 @@ def test_session_encode_decode_roundtrip():
         id="session-123",
         checklist_id="checklist-1.0.0",
         checklist_path="checklist.yaml",
-        started_at=datetime.now(timezone.utc),
+        started_at=datetime.now(UTC),
         status=SessionStatus.IN_PROGRESS,
         variables={"environment": "dev"},
         responses=[response],

@@ -32,9 +32,7 @@ def run(
 
 
 @app.command()
-def validate(
-    checklist: Path = typer.Argument(..., exists=True, readable=True)
-) -> None:
+def validate(checklist: Path = typer.Argument(..., exists=True, readable=True)) -> None:
     from tick.cli.commands.validate import validate_command
 
     validate_command(checklist=checklist)

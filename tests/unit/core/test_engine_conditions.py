@@ -13,13 +13,13 @@ def test_safe_eval_condition_basic():
     assert _safe_eval_condition("environment != 'prod'", variables) is False
     assert _safe_eval_condition("environment in ['prod', 'staging']", variables) is True
     assert _safe_eval_condition("environment in ['dev']", variables) is False
-    assert _safe_eval_condition(
-        "environment == 'prod' or environment == 'staging'", variables
-    ) is True
+    assert (
+        _safe_eval_condition("environment == 'prod' or environment == 'staging'", variables) is True
+    )
     assert _safe_eval_condition("environment not in ['prod']", variables) is False
     assert _safe_eval_condition("not environment", {"environment": ""}) is True
     assert _safe_eval_condition("flag and enabled", {"flag": True, "enabled": True}) is True
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match=r"Missing|missing"):
         _safe_eval_condition("missing == 'x'", variables)
 
 
@@ -30,9 +30,9 @@ def test_matrix_key_sorting():
 
 def test_safe_eval_condition_invalid_expression():
     variables = {"environment": "prod"}
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match=r"Unsupported|Invalid"):
         _safe_eval_condition("1 + 1", variables)
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match=r"Unsupported|Invalid"):
         _safe_eval_condition("__import__('os')", variables)
 
 

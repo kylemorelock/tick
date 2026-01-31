@@ -1,13 +1,13 @@
 from __future__ import annotations
 
 import time
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 import msgspec
 
-from tick.adapters.storage.session_store import SessionStore
 from tick.adapters.storage import session_store as session_store_module
+from tick.adapters.storage.session_store import SessionStore
 from tick.core.models.enums import SessionStatus
 from tick.core.models.session import Session
 
@@ -21,7 +21,7 @@ def _make_session(session_id: str, checklist_id: str, status: SessionStatus) -> 
         id=session_id,
         checklist_id=checklist_id,
         checklist_path=None,
-        started_at=datetime.now(timezone.utc),
+        started_at=datetime.now(UTC),
         completed_at=None,
         status=status,
         variables={},

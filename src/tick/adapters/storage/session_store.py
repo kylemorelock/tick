@@ -1,10 +1,11 @@
 from __future__ import annotations
 
+import contextlib
 import re
 import time
+from collections.abc import Iterable
 from datetime import datetime
 from pathlib import Path
-from typing import Iterable
 
 import msgspec
 from msgspec import DecodeError
@@ -83,10 +84,8 @@ class SessionStore:
             started_at=session.started_at,
             updated_at=time.time(),
         )
-        try:
+        with contextlib.suppress(OSError):
             self._save_index(entries.values())
-        except OSError:
-            pass
         return path
 
     def load(self, session_id: str) -> Session | None:
@@ -112,10 +111,8 @@ class SessionStore:
         entries = self._load_index()
         if entries is None:
             entries = self._scan_sessions()
-            try:
+            with contextlib.suppress(OSError):
                 self._save_index(entries.values())
-            except OSError:
-                pass
         summaries = [
             SessionSummary(
                 id=entry.id,
@@ -132,10 +129,8 @@ class SessionStore:
         entries = self._load_index()
         if entries is None:
             entries = self._scan_sessions()
-            try:
+            with contextlib.suppress(OSError):
                 self._save_index(entries.values())
-            except OSError:
-                pass
         candidates = [
             entry
             for entry in entries.values()

@@ -1,14 +1,14 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 from typer.testing import CliRunner
 
+from tick.adapters.storage.session_store import SessionStore
 from tick.cli.app import app
 from tick.core.models.enums import ItemResult, SessionStatus
 from tick.core.models.session import Response, Session
-from tick.adapters.storage.session_store import SessionStore
 
 
 def _session_id(seed: int) -> str:
@@ -104,13 +104,13 @@ def test_report_command_generates_output(tmp_path: Path):
         id=_session_id(1),
         checklist_id="minimal-checklist-1.0.0",
         checklist_path=str(checklist_path),
-        started_at=datetime.now(timezone.utc),
+        started_at=datetime.now(UTC),
         status=SessionStatus.COMPLETED,
         responses=[
             Response(
                 item_id="item-1",
                 result=ItemResult.PASS,
-                answered_at=datetime.now(timezone.utc),
+                answered_at=datetime.now(UTC),
             )
         ],
         variables={},
@@ -144,7 +144,7 @@ def test_report_command_missing_checklist(tmp_path: Path):
         id=_session_id(2),
         checklist_id="minimal-checklist-1.0.0",
         checklist_path=None,
-        started_at=datetime.now(timezone.utc),
+        started_at=datetime.now(UTC),
         status=SessionStatus.COMPLETED,
         responses=[],
         variables={},
@@ -163,7 +163,7 @@ def test_report_command_uses_session_checklist_path(tmp_path: Path):
         id=_session_id(4),
         checklist_id="minimal-checklist-1.0.0",
         checklist_path=str(checklist_path),
-        started_at=datetime.now(timezone.utc),
+        started_at=datetime.now(UTC),
         status=SessionStatus.COMPLETED,
         responses=[],
         variables={},
@@ -191,7 +191,7 @@ def test_report_command_digest_mismatch(tmp_path: Path):
         id=_session_id(5),
         checklist_id="minimal-checklist-1.0.0",
         checklist_path=str(checklist_path),
-        started_at=datetime.now(timezone.utc),
+        started_at=datetime.now(UTC),
         status=SessionStatus.COMPLETED,
         responses=[],
         variables={},
@@ -221,7 +221,7 @@ def test_report_command_unsupported_format(tmp_path: Path):
         id=_session_id(3),
         checklist_id="minimal-checklist-1.0.0",
         checklist_path=str(checklist_path),
-        started_at=datetime.now(timezone.utc),
+        started_at=datetime.now(UTC),
         status=SessionStatus.COMPLETED,
         responses=[],
         variables={},

@@ -1,9 +1,9 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
+import os
+from datetime import UTC, datetime
 from pathlib import Path
 
-import os
 import pytest
 import typer
 
@@ -15,9 +15,7 @@ from tick.core.models.session import Response, Session, decode_session, encode_s
 
 def _session_file(output_dir: Path) -> Path:
     return next(
-        path
-        for path in output_dir.glob("session-*.json")
-        if path.name != "session-index.json"
+        path for path in output_dir.glob("session-*.json") if path.name != "session-index.json"
     )
 
 
@@ -112,7 +110,7 @@ checklist:
         checklist_id="minimal-checklist-1.0.0",
         checklist_path=str(checklist_path),
         checklist_digest="deadbeef",
-        started_at=datetime.now(timezone.utc),
+        started_at=datetime.now(UTC),
         status=SessionStatus.IN_PROGRESS,
         variables={},
         responses=[],
@@ -352,14 +350,14 @@ checklist:
     response = Response(
         item_id="item-1",
         result=ItemResult.PASS,
-        answered_at=datetime.now(timezone.utc),
+        answered_at=datetime.now(UTC),
     )
     session = Session(
         id="d" * 32,
         checklist_id="minimal-checklist-1.0.0",
         checklist_path=str(checklist_path),
         checklist_digest=None,
-        started_at=datetime.now(timezone.utc),
+        started_at=datetime.now(UTC),
         status=SessionStatus.IN_PROGRESS,
         variables={},
         responses=[response],
@@ -398,7 +396,7 @@ checklist:
     response = Response(
         item_id="item-1",
         result=ItemResult.PASS,
-        answered_at=datetime.now(timezone.utc),
+        answered_at=datetime.now(UTC),
     )
     session = Session(
         id="f" * 32,
@@ -418,7 +416,7 @@ checklist:
                 }
             ).checklist
         ),
-        started_at=datetime.now(timezone.utc),
+        started_at=datetime.now(UTC),
         status=SessionStatus.IN_PROGRESS,
         variables={},
         responses=[response],
@@ -457,14 +455,14 @@ checklist:
     response = Response(
         item_id="wrong",
         result=ItemResult.PASS,
-        answered_at=datetime.now(timezone.utc),
+        answered_at=datetime.now(UTC),
     )
     session = Session(
         id="e" * 32,
         checklist_id="minimal-checklist-1.0.0",
         checklist_path=str(checklist_path),
         checklist_digest=None,
-        started_at=datetime.now(timezone.utc),
+        started_at=datetime.now(UTC),
         status=SessionStatus.IN_PROGRESS,
         variables={},
         responses=[response],

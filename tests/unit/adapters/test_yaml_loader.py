@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import pytest
+
 from tick.adapters.loaders.yaml_loader import YamlChecklistLoader
 
 
@@ -29,12 +31,8 @@ def test_yaml_loader_rejects_non_mapping(tmp_path: Path):
     path = tmp_path / "bad.yaml"
     path.write_text("- item", encoding="utf-8")
     loader = YamlChecklistLoader()
-    try:
+    with pytest.raises(ValueError, match=r"mapping"):
         loader.load(path)
-    except ValueError as exc:
-        assert "mapping" in str(exc).lower()
-    else:
-        raise AssertionError("Expected ValueError for non-mapping YAML")
 
 
 def test_yaml_loader_validate_schema_error(tmp_path: Path):
@@ -95,9 +93,5 @@ checklist:
         encoding="utf-8",
     )
     loader = YamlChecklistLoader()
-    try:
+    with pytest.raises(ValueError, match=r"validation failed"):
         loader.load(path)
-    except ValueError as exc:
-        assert "validation failed" in str(exc).lower()
-    else:
-        raise AssertionError("Expected ValueError on invalid checklist load")

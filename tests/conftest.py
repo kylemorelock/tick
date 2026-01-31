@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import pytest
 
@@ -104,7 +104,7 @@ def in_progress_session(minimal_checklist) -> Session:
         id="session-1",
         checklist_id=minimal_checklist.checklist_id,
         checklist_path=None,
-        started_at=datetime.now(timezone.utc),
+        started_at=datetime.now(UTC),
         status=SessionStatus.IN_PROGRESS,
         variables={},
         responses=[],
@@ -117,8 +117,8 @@ def completed_session(minimal_checklist) -> Session:
         id="session-2",
         checklist_id=minimal_checklist.checklist_id,
         checklist_path=None,
-        started_at=datetime.now(timezone.utc),
-        completed_at=datetime.now(timezone.utc),
+        started_at=datetime.now(UTC),
+        completed_at=datetime.now(UTC),
         status=SessionStatus.COMPLETED,
         variables={"environment": "dev"},
         responses=[],

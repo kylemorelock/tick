@@ -1,14 +1,16 @@
 from __future__ import annotations
 
+import contextlib
 import os
 import tempfile
+from collections.abc import Mapping
 from pathlib import Path
 
 from tick.core.models.checklist import Checklist, compute_checklist_digest
 from tick.core.models.session import Session
 
 
-def matrix_key(matrix: dict[str, object] | None) -> tuple[tuple[str, str], ...] | None:
+def matrix_key(matrix: Mapping[str, object] | None) -> tuple[tuple[str, str], ...] | None:
     if matrix is None or not isinstance(matrix, dict):
         return None
     return tuple(sorted((str(key), str(value)) for key, value in matrix.items()))
@@ -48,7 +50,5 @@ def atomic_write_bytes(path: Path, data: bytes) -> None:
         Path(temp_path).replace(path)
     finally:
         if os.path.exists(temp_path):
-            try:
+            with contextlib.suppress(OSError):
                 os.unlink(temp_path)
-            except OSError:
-                pass

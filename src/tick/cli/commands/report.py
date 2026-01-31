@@ -3,9 +3,8 @@ from __future__ import annotations
 from pathlib import Path
 
 import typer
-from rich.console import Console
-
 from msgspec import DecodeError
+from rich.console import Console
 
 from tick.adapters.loaders.yaml_loader import YamlChecklistLoader
 from tick.adapters.reporters.html import HtmlReporter
@@ -15,8 +14,10 @@ from tick.adapters.storage.session_store import SessionStore
 from tick.core.models.session import encode_session
 from tick.core.utils import atomic_write_bytes, validate_session_digest
 
-
-_REPORTERS = {
+_REPORTERS: dict[
+    str,
+    type[HtmlReporter] | type[JsonReporter] | type[MarkdownReporter],
+] = {
     "html": HtmlReporter,
     "json": JsonReporter,
     "md": MarkdownReporter,
@@ -86,9 +87,7 @@ def report_command(
     try:
         digest = validate_session_digest(session, checklist)
     except ValueError as exc:
-        console.print(
-            f"[red]{exc} Use the original checklist or restart the run.[/red]"
-        )
+        console.print(f"[red]{exc} Use the original checklist or restart the run.[/red]")
         raise typer.Exit(code=1) from exc
     if session.checklist_digest is None:
         console.print(

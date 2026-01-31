@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import msgspec
 
@@ -15,7 +15,7 @@ def _make_session(checklist_id: str) -> Session:
     response = Response(
         item_id="item-1",
         result=ItemResult.PASS,
-        answered_at=datetime.now(timezone.utc),
+        answered_at=datetime.now(UTC),
         notes="ok",
         evidence=("screenshot.png",),
     )
@@ -23,7 +23,7 @@ def _make_session(checklist_id: str) -> Session:
         id="session-1",
         checklist_id=checklist_id,
         checklist_path=None,
-        started_at=datetime.now(timezone.utc),
+        started_at=datetime.now(UTC),
         status=SessionStatus.COMPLETED,
         responses=[response],
         variables={},
@@ -51,7 +51,7 @@ def test_markdown_reporter_escapes_cells_and_matrix(minimal_checklist):
     response = Response(
         item_id="item-1",
         result=ItemResult.FAIL,
-        answered_at=datetime.now(timezone.utc),
+        answered_at=datetime.now(UTC),
         notes="line1\nline2 | note",
         matrix_context={"role": "admin"},
     )
@@ -59,7 +59,7 @@ def test_markdown_reporter_escapes_cells_and_matrix(minimal_checklist):
         id="session-2",
         checklist_id=minimal_checklist.checklist_id,
         checklist_path=None,
-        started_at=datetime.now(timezone.utc),
+        started_at=datetime.now(UTC),
         status=SessionStatus.COMPLETED,
         responses=[response],
         variables={},

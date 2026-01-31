@@ -18,9 +18,11 @@ class HtmlReporter(ReporterBase):
     @staticmethod
     @lru_cache(maxsize=1)
     def _template() -> Template:
-        template_text = resources.files("tick.templates.reports").joinpath(
-            "report.html.j2"
-        ).read_text(encoding="utf-8")
+        template_text = (
+            resources.files("tick.templates.reports")
+            .joinpath("report.html.j2")
+            .read_text(encoding="utf-8")
+        )
         env = Environment(autoescape=select_autoescape())
         return env.from_string(template_text)
 

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
@@ -55,7 +55,7 @@ checklist:
     response = Response(
         item_id="item-1",
         result=ItemResult.PASS,
-        answered_at=datetime.now(timezone.utc),
+        answered_at=datetime.now(UTC),
         notes=None,
         evidence=(),
         matrix_context=None,
@@ -65,7 +65,7 @@ checklist:
         checklist_id=checklist.checklist_id,
         checklist_path=str(checklist_path),
         checklist_digest=digest,
-        started_at=datetime.now(timezone.utc),
+        started_at=datetime.now(UTC),
         status=SessionStatus.COMPLETED,
         variables={},
         responses=[response],
@@ -122,7 +122,7 @@ def test_report_command_rejects_bad_checklist_extension(tmp_path: Path) -> None:
         checklist_id="minimal-checklist-1.0.0",
         checklist_path=str(checklist_path),
         checklist_digest=None,
-        started_at=datetime.now(timezone.utc),
+        started_at=datetime.now(UTC),
         status=SessionStatus.COMPLETED,
         variables={},
         responses=[],
@@ -146,7 +146,7 @@ def test_report_command_rejects_checklist_traversal(tmp_path: Path) -> None:
         checklist_id="minimal-checklist-1.0.0",
         checklist_path=None,
         checklist_digest=None,
-        started_at=datetime.now(timezone.utc),
+        started_at=datetime.now(UTC),
         status=SessionStatus.COMPLETED,
         variables={},
         responses=[],
@@ -184,7 +184,7 @@ def test_report_command_resolves_relative_checklist_path(monkeypatch, tmp_path: 
         checklist_id=checklist.checklist_id,
         checklist_path=None,
         checklist_digest=compute_checklist_digest(checklist),
-        started_at=datetime.now(timezone.utc),
+        started_at=datetime.now(UTC),
         status=SessionStatus.COMPLETED,
         variables={},
         responses=[],
@@ -231,7 +231,7 @@ def test_report_command_load_checklist_failure(tmp_path: Path) -> None:
         checklist_id="minimal-checklist-1.0.0",
         checklist_path=str(checklist_path),
         checklist_digest=None,
-        started_at=datetime.now(timezone.utc),
+        started_at=datetime.now(UTC),
         status=SessionStatus.COMPLETED,
         variables={},
         responses=[],
@@ -267,14 +267,14 @@ def test_report_command_updates_missing_digest(tmp_path: Path) -> None:
     response = Response(
         item_id="item-1",
         result=ItemResult.PASS,
-        answered_at=datetime.now(timezone.utc),
+        answered_at=datetime.now(UTC),
     )
     session = Session(
         id=_session_id(2),
         checklist_id=checklist.checklist_id,
         checklist_path=str(checklist_path),
         checklist_digest=None,
-        started_at=datetime.now(timezone.utc),
+        started_at=datetime.now(UTC),
         status=SessionStatus.COMPLETED,
         variables={},
         responses=[response],
@@ -317,7 +317,7 @@ def test_report_command_update_digest_write_failure(monkeypatch, tmp_path: Path)
         checklist_id=checklist.checklist_id,
         checklist_path=str(checklist_path),
         checklist_digest=None,
-        started_at=datetime.now(timezone.utc),
+        started_at=datetime.now(UTC),
         status=SessionStatus.COMPLETED,
         variables={},
         responses=[],
@@ -364,7 +364,7 @@ def test_report_command_rejects_missing_output_dir(tmp_path: Path) -> None:
         checklist_id=checklist.checklist_id,
         checklist_path=str(checklist_path),
         checklist_digest=compute_checklist_digest(checklist),
-        started_at=datetime.now(timezone.utc),
+        started_at=datetime.now(UTC),
         status=SessionStatus.COMPLETED,
         variables={},
         responses=[],
@@ -402,14 +402,14 @@ def test_report_command_overwrites_existing_output(tmp_path: Path) -> None:
     response = Response(
         item_id="item-1",
         result=ItemResult.PASS,
-        answered_at=datetime.now(timezone.utc),
+        answered_at=datetime.now(UTC),
     )
     session = Session(
         id=_session_id(7),
         checklist_id=checklist.checklist_id,
         checklist_path=str(checklist_path),
         checklist_digest=compute_checklist_digest(checklist),
-        started_at=datetime.now(timezone.utc),
+        started_at=datetime.now(UTC),
         status=SessionStatus.COMPLETED,
         variables={},
         responses=[response],
@@ -449,7 +449,7 @@ def test_report_command_rejects_output_path_directory(tmp_path: Path) -> None:
         checklist_id=checklist.checklist_id,
         checklist_path=str(checklist_path),
         checklist_digest=compute_checklist_digest(checklist),
-        started_at=datetime.now(timezone.utc),
+        started_at=datetime.now(UTC),
         status=SessionStatus.COMPLETED,
         variables={},
         responses=[],

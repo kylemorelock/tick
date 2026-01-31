@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+from collections.abc import Mapping
 from pathlib import Path
 from typing import Any
 
@@ -47,9 +48,7 @@ def _normalize_responses(data: dict[str, Any]) -> dict[str, list[dict[str, Any]]
                 entry = {**entry, "item_id": item_id}
                 normalized.append(entry)
     elif isinstance(responses, list):
-        for entry in responses:
-            if isinstance(entry, dict) and "item_id" in entry:
-                normalized.append(entry)
+        normalized.extend(e for e in responses if isinstance(e, dict) and "item_id" in e)
     response_map: dict[str, list[dict[str, Any]]] = {}
     for entry in normalized:
         response_map.setdefault(str(entry["item_id"]), []).append(entry)
@@ -148,19 +147,21 @@ def run_command(
             raise typer.Exit(code=1) from exc
         completed = len(engine.state.session.responses)
         total = len(engine.state.items)
-        console.print(f"[yellow]Resuming session {session.id} ({completed}/{total} complete)[/yellow]")
+        console.print(
+            f"[yellow]Resuming session {session.id} ({completed}/{total} complete)[/yellow]"
+        )
     else:
         if no_interactive:
             variables_data = answers_data.get("variables", {})
             if not isinstance(variables_data, dict):
                 console.print("[red]Answers file variables must be a mapping.[/red]")
                 raise typer.Exit(code=1)
-            resolved, errors = _resolve_variables(variables_data, checklist_model.variables)
+            resolved_vars, errors = _resolve_variables(variables_data, checklist_model.variables)
             if errors:
                 for error in errors:
                     console.print(f"[red]{error}[/red]")
                 raise typer.Exit(code=1)
-            variables = resolved
+            variables: Mapping[str, object] = resolved_vars
         else:
             variables = ask_variables(checklist_model.variables, console)
         try:
@@ -178,49 +179,52 @@ def run_command(
     response_map = _normalize_responses(answers_data)
 
     if no_interactive:
-        for resolved in engine.state.items[engine.state.current_index :]:
+        for item_resolved in engine.state.items[engine.state.current_index :]:
             entry = None
-            if resolved.item.id in response_map and response_map[resolved.item.id]:
-                if resolved.matrix_context:
-                    target = matrix_key(resolved.matrix_context)
-                    for idx, candidate in enumerate(response_map[resolved.item.id]):
+            if response_map.get(item_resolved.item.id):
+                if item_resolved.matrix_context:
+                    target = matrix_key(item_resolved.matrix_context)
+                    for idx, candidate in enumerate(response_map[item_resolved.item.id]):
                         if matrix_key(candidate.get("matrix")) == target:
-                            entry = response_map[resolved.item.id].pop(idx)
+                            entry = response_map[item_resolved.item.id].pop(idx)
                             break
                 else:
-                    entry = response_map[resolved.item.id].pop(0)
+                    entry = response_map[item_resolved.item.id].pop(0)
             result = _parse_result(entry.get("result") if entry else None)
             notes = entry.get("notes") if entry else None
             evidence = normalize_evidence(entry.get("evidence") if entry else None)
             engine.record_response(
-                item=resolved.item,
+                item=item_resolved.item,
                 result=result,
                 notes=notes,
                 evidence=evidence or None,
-                matrix_context=resolved.matrix_context,
+                matrix_context=item_resolved.matrix_context,
             )
         engine.complete()
         unused = sum(len(entries) for entries in response_map.values())
         if unused:
-            console.print(
-                f"[yellow]Warning: {unused} answer entries did not match any checklist item.[/yellow]"
+            msg = (
+                f"[yellow]Warning: {unused} answer entries did not match "
+                "any checklist item.[/yellow]"
             )
+            console.print(msg)
     else:
         with Progress(console=console) as progress:
             task = progress.add_task(f"Checklist progress (0/{total})", total=total)
             while engine.current_item is not None:
-                resolved = engine.current_item
-                if resolved is None:
+                current = engine.current_item
+                if current is None:
                     break
                 progress.stop()
-                result, notes, evidence = ask_item_response(resolved, console)
+                result, notes, evidence_iter = ask_item_response(current, console)
+                evidence_list: list[str] | None = list(evidence_iter) if evidence_iter else None
                 progress.start()
                 engine.record_response(
-                    item=resolved.item,
+                    item=current.item,
                     result=result,
                     notes=notes,
-                    evidence=evidence,
-                    matrix_context=resolved.matrix_context,
+                    evidence=evidence_list,
+                    matrix_context=current.matrix_context,
                 )
                 progress.advance(task)
                 progress.update(

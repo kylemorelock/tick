@@ -36,7 +36,9 @@ class MarkdownReporter(ReporterBase):
             severity = item.severity.value if item else "unknown"
             notes = response.notes or ""
             if response.matrix_context:
-                context = ", ".join(f"{key}={value}" for key, value in response.matrix_context.items())
+                context = ", ".join(
+                    f"{key}={value}" for key, value in response.matrix_context.items()
+                )
                 check = f"{check} ({context})"
             lines.append(
                 "| "

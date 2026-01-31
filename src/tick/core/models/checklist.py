@@ -89,5 +89,5 @@ class ChecklistDocument(BaseModel):
     checklist: Checklist
 
     @classmethod
-    def from_raw(cls, raw: dict[str, Any]) -> "ChecklistDocument":
+    def from_raw(cls, raw: dict[str, Any]) -> ChecklistDocument:
         return cls.model_validate(raw)

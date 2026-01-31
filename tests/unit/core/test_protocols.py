@@ -3,7 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from tick.core.models.checklist import Checklist
-from tick.core.models.session import Session, SessionSummary
+from tick.core.models.session import Session
 from tick.core.protocols import ChecklistLoader, Reporter, SessionStorage
 
 

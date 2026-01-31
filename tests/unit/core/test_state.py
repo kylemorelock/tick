@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from tick.core.models.checklist import ChecklistItem
 from tick.core.models.enums import ItemResult, SessionStatus
@@ -13,7 +13,7 @@ def _make_session() -> Session:
         id="session-1",
         checklist_id="checklist-1.0.0",
         checklist_path=None,
-        started_at=datetime.now(timezone.utc),
+        started_at=datetime.now(UTC),
         status=SessionStatus.IN_PROGRESS,
         variables={},
         responses=[],
@@ -40,7 +40,7 @@ def test_engine_state_with_response_advances():
     response = Response(
         item_id="item-1",
         result=ItemResult.PASS,
-        answered_at=datetime.now(timezone.utc),
+        answered_at=datetime.now(UTC),
     )
     updated = state.with_response(response)
     assert len(updated.session.responses) == 1

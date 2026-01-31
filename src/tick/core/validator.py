@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-import fastjsonschema
+import fastjsonschema  # type: ignore[import-untyped]
 from fastjsonschema import JsonSchemaException
 
 

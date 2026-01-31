@@ -18,8 +18,10 @@ def init_command(template: str, output: Path | None, overwrite: bool) -> None:
         console.print(f"[red]Unknown template: {template}[/red]")
         raise typer.Exit(code=1)
     try:
-        content = resources.files("tick.templates.checklists").joinpath(filename).read_text(
-            encoding="utf-8"
+        content = (
+            resources.files("tick.templates.checklists")
+            .joinpath(filename)
+            .read_text(encoding="utf-8")
         )
     except OSError as exc:
         console.print(f"[red]Failed to load template: {exc}[/red]")

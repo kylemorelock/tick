@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Iterable
+from collections.abc import Iterable
 
 from rich.console import Console
 from rich.prompt import Confirm, Prompt
@@ -8,7 +8,6 @@ from rich.prompt import Confirm, Prompt
 from tick.core.models.checklist import ChecklistVariable
 from tick.core.models.enums import ItemResult
 from tick.core.state import ResolvedItem
-
 
 RESULT_CHOICES = {
     "pass": ItemResult.PASS,
@@ -20,6 +19,7 @@ RESULT_CHOICES = {
     "na": ItemResult.NOT_APPLICABLE,
     "n": ItemResult.NOT_APPLICABLE,
 }
+
 
 def _prompt_result(console: Console) -> ItemResult:
     while True:
@@ -35,9 +35,7 @@ def _prompt_result(console: Console) -> ItemResult:
         console.print("[red]Please enter one of: pass/p, fail/f, skip/s, na/n.[/red]")
 
 
-def ask_variables(
-    variables: dict[str, ChecklistVariable], console: Console
-) -> dict[str, str]:
+def ask_variables(variables: dict[str, ChecklistVariable], console: Console) -> dict[str, str]:
     results: dict[str, str] = {}
     for key, spec in variables.items():
         if spec.required:
@@ -78,9 +76,7 @@ def ask_item_response(
     console.print(f"{item.display_check}")
     if item.item.guidance:
         console.print(f"[dim]{item.item.guidance}[/dim]")
-    console.print(
-        "[dim]Result options: pass (p), fail (f), skip (s), not applicable (na/n).[/dim]"
-    )
+    console.print("[dim]Result options: pass (p), fail (f), skip (s), not applicable (na/n).[/dim]")
     result = _prompt_result(console)
     notes = Prompt.ask("Notes (optional, press enter to skip)", default="", console=console)
     notes_value = notes or None

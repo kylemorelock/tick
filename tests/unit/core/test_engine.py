@@ -1,6 +1,8 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
+
+import pytest
 
 from tick.core.engine import ExecutionEngine
 from tick.core.models.enums import ItemResult, SessionStatus
@@ -49,12 +51,8 @@ def test_engine_records_response(minimal_checklist):
 
 def test_engine_state_before_start_raises():
     engine = ExecutionEngine(loader=DummyLoader(), storage=DummyStorage())
-    try:
+    with pytest.raises(RuntimeError, match=r"not been started"):
         _ = engine.state
-    except RuntimeError as exc:
-        assert "not been started" in str(exc).lower()
-    else:
-        raise AssertionError("Expected RuntimeError when accessing state before start")
 
 
 def test_engine_resume_advances_index(minimal_checklist, in_progress_session):
@@ -64,7 +62,7 @@ def test_engine_resume_advances_index(minimal_checklist, in_progress_session):
         Response(
             item_id="item-1",
             result=ItemResult.PASS,
-            answered_at=datetime.now(timezone.utc),
+            answered_at=datetime.now(UTC),
         )
     ]
     engine.resume(minimal_checklist, in_progress_session)
@@ -75,12 +73,8 @@ def test_engine_resume_digest_mismatch_raises(minimal_checklist, in_progress_ses
     storage = DummyStorage()
     engine = ExecutionEngine(loader=DummyLoader(), storage=storage)
     in_progress_session.checklist_digest = "mismatch"
-    try:
+    with pytest.raises(ValueError, match=r"do not match"):
         engine.resume(minimal_checklist, in_progress_session)
-    except ValueError as exc:
-        assert "do not match" in str(exc).lower()
-    else:
-        raise AssertionError("Expected ValueError on digest mismatch")
 
 
 def test_engine_resume_rejects_extra_responses(minimal_checklist, in_progress_session):
@@ -90,20 +84,16 @@ def test_engine_resume_rejects_extra_responses(minimal_checklist, in_progress_se
         Response(
             item_id="item-1",
             result=ItemResult.PASS,
-            answered_at=datetime.now(timezone.utc),
+            answered_at=datetime.now(UTC),
         ),
         Response(
             item_id="item-1",
             result=ItemResult.PASS,
-            answered_at=datetime.now(timezone.utc),
+            answered_at=datetime.now(UTC),
         ),
     ]
-    try:
+    with pytest.raises(ValueError, match=r"responses"):
         engine.resume(minimal_checklist, in_progress_session)
-    except ValueError as exc:
-        assert "responses" in str(exc).lower()
-    else:
-        raise AssertionError("Expected ValueError on extra responses")
 
 
 def test_engine_resume_rejects_item_mismatch(minimal_checklist, in_progress_session):
@@ -113,15 +103,11 @@ def test_engine_resume_rejects_item_mismatch(minimal_checklist, in_progress_sess
         Response(
             item_id="wrong",
             result=ItemResult.PASS,
-            answered_at=datetime.now(timezone.utc),
+            answered_at=datetime.now(UTC),
         )
     ]
-    try:
+    with pytest.raises(ValueError, match=r"responses"):
         engine.resume(minimal_checklist, in_progress_session)
-    except ValueError as exc:
-        assert "responses" in str(exc).lower()
-    else:
-        raise AssertionError("Expected ValueError on item mismatch")
 
 
 def test_engine_resume_rejects_matrix_mismatch(complex_checklist, in_progress_session):
@@ -133,21 +119,17 @@ def test_engine_resume_rejects_matrix_mismatch(complex_checklist, in_progress_se
         Response(
             item_id="cond-1",
             result=ItemResult.PASS,
-            answered_at=datetime.now(timezone.utc),
+            answered_at=datetime.now(UTC),
         ),
         Response(
             item_id="matrix-1",
             result=ItemResult.PASS,
-            answered_at=datetime.now(timezone.utc),
+            answered_at=datetime.now(UTC),
             matrix_context={"role": "wrong"},
-        )
+        ),
     ]
-    try:
+    with pytest.raises(ValueError, match=r"responses"):
         engine.resume(complex_checklist, in_progress_session)
-    except ValueError as exc:
-        assert "responses" in str(exc).lower()
-    else:
-        raise AssertionError("Expected ValueError on matrix mismatch")
 
 
 def test_engine_save_persists_session(minimal_checklist):

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from rich.console import Console
 from rich.prompt import Confirm, Prompt
@@ -122,13 +122,13 @@ def test_render_summary_outputs_table():
         id="session-1",
         checklist_id="checklist-1",
         checklist_path=None,
-        started_at=datetime.now(timezone.utc),
+        started_at=datetime.now(UTC),
         status=SessionStatus.COMPLETED,
         responses=[
             Response(
                 item_id="item-1",
                 result=ItemResult.PASS,
-                answered_at=datetime.now(timezone.utc),
+                answered_at=datetime.now(UTC),
             )
         ],
         variables={},

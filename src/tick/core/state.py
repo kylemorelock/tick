@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import attrs
 
@@ -38,7 +38,7 @@ class EngineState:
             return None
         return self.items[self.current_index]
 
-    def with_response(self, response: Response) -> "EngineState":
+    def with_response(self, response: Response) -> EngineState:
         self.session.responses.append(response)
         return EngineState(
             checklist=self.checklist,
@@ -47,8 +47,8 @@ class EngineState:
             current_index=self.current_index + 1,
         )
 
-    def with_completed(self) -> "EngineState":
-        now = datetime.now(timezone.utc)
+    def with_completed(self) -> EngineState:
+        now = datetime.now(UTC)
         self.session.completed_at = now
         self.session.status = SessionStatus.COMPLETED
         return EngineState(

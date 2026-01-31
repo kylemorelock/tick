@@ -1,7 +1,7 @@
 """Domain models for tick."""
 
 from tick.core.models.checklist import Checklist, ChecklistItem, ChecklistSection, ChecklistVariable
-from tick.core.models.enums import ItemResult, Severity, SessionStatus
+from tick.core.models.enums import ItemResult, SessionStatus, Severity
 from tick.core.models.session import Response, Session, SessionSummary
 
 __all__ = [
@@ -10,9 +10,9 @@ __all__ = [
     "ChecklistSection",
     "ChecklistVariable",
     "ItemResult",
-    "Severity",
-    "SessionStatus",
     "Response",
     "Session",
+    "SessionStatus",
     "SessionSummary",
+    "Severity",
 ]

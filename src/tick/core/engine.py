@@ -1,8 +1,8 @@
 from __future__ import annotations
 
 import ast
-from datetime import datetime, timezone
-from typing import Iterable
+from collections.abc import Iterable, Mapping
+from datetime import UTC, datetime
 from uuid import uuid4
 
 from tick.core.models.checklist import Checklist, ChecklistItem
@@ -13,7 +13,7 @@ from tick.core.state import EngineState, ResolvedItem
 from tick.core.utils import ensure_session_digest, matrix_key, validate_session_digest
 
 
-def _safe_eval_condition(condition: str, variables: dict[str, object]) -> bool:
+def _safe_eval_condition(condition: str, variables: Mapping[str, object]) -> bool:
     if not condition:
         return True
 
@@ -52,14 +52,20 @@ def _safe_eval_condition(condition: str, variables: dict[str, object]) -> bool:
             left = _eval(node.left)
             for op, comparator in zip(node.ops, node.comparators, strict=False):
                 right = _eval(comparator)
-                if isinstance(op, ast.Eq) and not (left == right):
+                if isinstance(op, ast.Eq) and left != right:
                     return False
-                if isinstance(op, ast.NotEq) and not (left != right):
+                if isinstance(op, ast.NotEq) and left == right:
                     return False
-                if isinstance(op, ast.In) and not (left in right):
-                    return False
-                if isinstance(op, ast.NotIn) and not (left not in right):
-                    return False
+                if isinstance(op, ast.In):
+                    if not isinstance(right, (list, tuple)):
+                        return False
+                    if left not in right:
+                        return False
+                if isinstance(op, ast.NotIn):
+                    if not isinstance(right, (list, tuple)):
+                        return False
+                    if left in right:
+                        return False
                 left = right
             return True
         if isinstance(node, ast.Name):
@@ -82,7 +88,7 @@ def _safe_eval_condition(condition: str, variables: dict[str, object]) -> bool:
 
 
 def _expand_items(
-    checklist: Checklist, variables: dict[str, object]
+    checklist: Checklist, variables: Mapping[str, object]
 ) -> tuple[ResolvedItem, ...]:
     resolved: list[ResolvedItem] = []
     for section in checklist.sections:
@@ -92,14 +98,14 @@ def _expand_items(
             if item.condition and not _safe_eval_condition(item.condition, variables):
                 continue
             if item.matrix:
-                for entry in item.matrix:
-                    resolved.append(
-                        ResolvedItem(
-                            section_name=section.name,
-                            item=item,
-                            matrix_context=entry,
-                        )
+                resolved.extend(
+                    ResolvedItem(
+                        section_name=section.name,
+                        item=item,
+                        matrix_context=entry,
                     )
+                    for entry in item.matrix
+                )
             else:
                 resolved.append(ResolvedItem(section_name=section.name, item=item))
     return tuple(resolved)
@@ -123,19 +129,21 @@ class ExecutionEngine:
     def current_item(self) -> ResolvedItem | None:
         return self.state.current_item
 
-    def start(self, checklist: Checklist, variables: dict[str, object], checklist_path: str) -> None:
-        normalized = dict(variables)
+    def start(
+        self, checklist: Checklist, variables: Mapping[str, object], checklist_path: str
+    ) -> None:
+        session_vars = {k: str(v) for k, v in variables.items()}
         session = Session(
             id=uuid4().hex,
             checklist_id=checklist.checklist_id,
             checklist_path=checklist_path,
-            started_at=datetime.now(timezone.utc),
+            started_at=datetime.now(UTC),
             status=SessionStatus.IN_PROGRESS,
-            variables=normalized,
+            variables=session_vars,
             responses=[],
         )
         ensure_session_digest(session, checklist)
-        items = _expand_items(checklist, normalized)
+        items = _expand_items(checklist, variables)
         self._state = EngineState(checklist=checklist, session=session, items=items)
 
     def resume(self, checklist: Checklist, session: Session) -> None:
@@ -168,7 +176,7 @@ class ExecutionEngine:
         response = Response(
             item_id=item.id,
             result=result,
-            answered_at=datetime.now(timezone.utc),
+            answered_at=datetime.now(UTC),
             notes=notes,
             evidence=tuple(evidence or ()),
             matrix_context=matrix_context,
