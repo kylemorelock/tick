@@ -8,9 +8,14 @@ from rich.console import Console
 from tick.adapters.loaders.yaml_loader import YamlChecklistLoader
 
 
-def validate_command(checklist: Path) -> None:
+def validate_command(
+    checklist: Path, cache_dir: Path | None = None, no_cache: bool = False
+) -> None:
     console = Console()
-    loader = YamlChecklistLoader()
+    from tick.core.cache import ChecklistCache
+
+    cache = None if no_cache else ChecklistCache(cache_dir)
+    loader = YamlChecklistLoader(cache=cache)
     try:
         issues = loader.validate(checklist)
     except (OSError, ValueError) as exc:

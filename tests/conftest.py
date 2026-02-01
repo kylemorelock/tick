@@ -3,6 +3,7 @@ from __future__ import annotations
 from datetime import UTC, datetime
 
 import pytest
+from ruamel.yaml import YAML
 
 from tick.core.models.checklist import ChecklistDocument
 from tick.core.models.enums import SessionStatus
@@ -116,6 +117,42 @@ def complex_checklist_data() -> dict[str, object]:
 @pytest.fixture
 def complex_checklist(complex_checklist_data):
     return ChecklistDocument.from_raw(complex_checklist_data).checklist
+
+
+@pytest.fixture
+def large_checklist_path(tmp_path):
+    def build_large_checklist(sections: int = 20, items_per_section: int = 25) -> dict[str, object]:
+        checklist_sections = []
+        for section_index in range(sections):
+            items = [
+                {
+                    "id": f"sec-{section_index:02d}-item-{item_index:03d}",
+                    "check": f"Check {section_index}-{item_index}",
+                    "severity": "medium",
+                }
+                for item_index in range(items_per_section)
+            ]
+            checklist_sections.append(
+                {
+                    "name": f"Section {section_index}",
+                    "items": items,
+                }
+            )
+        return {
+            "checklist": {
+                "name": "Large Checklist",
+                "version": "1.0.0",
+                "domain": "web",
+                "sections": checklist_sections,
+            }
+        }
+
+    data = build_large_checklist()
+    path = tmp_path / "large-checklist.yaml"
+    yaml = YAML()
+    with path.open("w", encoding="utf-8") as handle:
+        yaml.dump(data, handle)
+    return path
 
 
 @pytest.fixture

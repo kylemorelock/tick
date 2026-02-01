@@ -1,6 +1,13 @@
 # Getting started
 
-## Install dependencies
+## Install (end users)
+
+```bash
+pipx install tick
+# or: uv tool install tick
+```
+
+## Install dependencies (from source)
 
 ```bash
 uv sync
@@ -63,3 +70,8 @@ uv run tick report ./reports/session-<id>.json --format html --output report.htm
 
 Supported formats: `html`, `json`, `md`, `markdown`.
 If the stored checklist path is outside the session directory, pass `--checklist`.
+
+## Single-binary (optional)
+
+tick can be packaged as a standalone binary using tools like PyInstaller or PyOxidizer.
+This is optional, but useful for locked-down environments.

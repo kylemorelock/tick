@@ -8,7 +8,7 @@ from jinja2 import Environment, Template, select_autoescape
 
 from tick.adapters.reporters.base import ReporterBase
 from tick.adapters.reporters.stats import compute_stats
-from tick.adapters.reporters.utils import build_items_by_id
+from tick.adapters.reporters.utils import build_items_by_id, build_ordered_responses
 from tick.core.models.checklist import Checklist
 from tick.core.models.session import Session
 
@@ -51,7 +51,8 @@ class HtmlReporter(ReporterBase):
 
         items_by_id = build_items_by_id(checklist)
         rows = []
-        for response in session.responses:
+        ordered_responses = build_ordered_responses(checklist, session)
+        for response in ordered_responses:
             item = items_by_id.get(response.item_id)
             rows.append(
                 {

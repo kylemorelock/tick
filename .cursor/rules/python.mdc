@@ -11,3 +11,9 @@ alwaysApply: false
 - In CLI commands, validate early and fail with `typer.Exit(code=1)`.
 - Persist sessions via `encode_session`/`decode_session` and `SessionStore`.
 - Avoid heavy imports in `src/tick/cli/app.py` and `src/tick/__main__.py` so `--help` stays fast.
+
+# Linting and style
+
+- Keep lines ≤ 100 characters (project `line-length` in pyproject.toml). Break long lines (e.g. list comprehensions, function signatures, call arguments) across multiple lines.
+- Prefer list comprehensions over `for` loops that only `.append()` to a list (ruff PERF401).
+- Before committing Python changes, run `uv run ruff check .` and `uv run ruff format --check .` (or `ruff format .` to fix). Fix any E501 (line too long) and PERF401 before pushing.

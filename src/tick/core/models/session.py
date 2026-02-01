@@ -40,6 +40,8 @@ class Session(msgspec.Struct):
     status: SessionStatus = SessionStatus.IN_PROGRESS
     variables: dict[str, str] = msgspec.field(default_factory=dict)
     responses: list[Response] = msgspec.field(default_factory=list)
+    resolved_checklist: dict[str, object] | None = None
+    resolved_items: list[dict[str, object]] | None = None
 
 
 class SessionSummary(msgspec.Struct, frozen=True):

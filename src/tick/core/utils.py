@@ -3,11 +3,12 @@ from __future__ import annotations
 import contextlib
 import os
 import tempfile
-from collections.abc import Mapping
+from collections.abc import Iterable, Mapping
 from pathlib import Path
 
 from tick.core.models.checklist import Checklist, compute_checklist_digest
 from tick.core.models.session import Session
+from tick.core.state import ResolvedItem
 
 
 def matrix_key(matrix: Mapping[str, object] | None) -> tuple[tuple[str, str], ...] | None:
@@ -24,6 +25,21 @@ def normalize_evidence(raw: object) -> list[str]:
     if isinstance(raw, (list, tuple)):
         return [str(entry) for entry in raw if str(entry).strip()]
     return []
+
+
+def build_resolved_items_payload(items: Iterable[ResolvedItem]) -> list[dict[str, object]]:
+    return [
+        {
+            "section_name": resolved.section_name,
+            "item_id": resolved.item.id,
+            "check": resolved.item.check,
+            "severity": resolved.item.severity.value,
+            "guidance": resolved.item.guidance,
+            "evidence_required": resolved.item.evidence_required,
+            "matrix_context": resolved.matrix_context,
+        }
+        for resolved in items
+    ]
 
 
 def validate_session_digest(session: Session, checklist: Checklist) -> str:

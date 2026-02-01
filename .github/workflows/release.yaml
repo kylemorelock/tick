@@ -23,6 +23,41 @@ jobs:
           name: dist
           path: dist/*
 
+  github-release:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Extract changelog notes
+        run: |
+          python - <<'PY'
+          import os
+          import re
+          from pathlib import Path
+
+          tag = os.environ.get("GITHUB_REF_NAME", "")
+          version = tag.lstrip("v")
+          changelog = Path("CHANGELOG.md").read_text(encoding="utf-8")
+          pattern = rf"^##\\s+\\[?{re.escape(version)}\\]?\\s*$"
+          match = re.search(pattern, changelog, flags=re.MULTILINE)
+          if not match:
+              notes = f"Release {version}"
+          else:
+              start = match.end()
+              next_match = re.search(r"^##\\s+", changelog[start:], flags=re.MULTILINE)
+              end = start + next_match.start() if next_match else len(changelog)
+              notes = changelog[start:end].strip()
+              if not notes:
+                  notes = f"Release {version}"
+          Path("release_notes.md").write_text(notes + "\\n", encoding="utf-8")
+          PY
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          body_path: release_notes.md
+
   publish:
     needs: build
     runs-on: ubuntu-latest
