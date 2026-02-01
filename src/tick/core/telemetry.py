@@ -1,8 +1,8 @@
 from __future__ import annotations
 
 import os
-from collections.abc import Generator
 import sys
+from collections.abc import Generator
 from contextlib import contextmanager
 from pathlib import Path
 from time import perf_counter, time
