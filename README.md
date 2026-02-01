@@ -1,8 +1,27 @@
 # tick ✅
 
+[![CI](https://github.com/kylemorelock/tick/actions/workflows/ci.yaml/badge.svg)](https://github.com/kylemorelock/tick/actions/workflows/ci.yaml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
 tick is a CLI tool for QA engineers to execute configurable testing checklists. It reads
 YAML checklists, guides users through each item, records responses, and generates reports
 that are ready to share.
+
+## Install
+
+**From source (recommended for development):**
+
+```bash
+git clone https://github.com/kylemorelock/tick.git && cd tick
+uv sync
+```
+
+**From PyPI (after first release):**
+
+```bash
+pip install tick
+# or: uv add tick
+```
 
 ## 🚀 Quick start
 
@@ -296,3 +315,7 @@ uv run mypy src/
   `src/tick/cli/commands/report.py`.
 - Add new checklist loaders by implementing `ChecklistLoader` from
   `src/tick/core/protocols.py`.
+
+## License
+
+tick is released under the [MIT License](LICENSE).
