@@ -7,6 +7,7 @@ from msgspec import DecodeError
 from rich.console import Console
 
 from tick.adapters.loaders.yaml_loader import YamlChecklistLoader
+from tick.adapters.reporters.base import ReporterBase
 from tick.adapters.reporters.html import HtmlReporter
 from tick.adapters.reporters.json import JsonReporter
 from tick.adapters.reporters.markdown import MarkdownReporter
@@ -112,6 +113,7 @@ def report_command(
     if template_path and format.lower() != "html":
         console.print("[yellow]Warning: --template is only used with HTML format.[/yellow]")
 
+    reporter: ReporterBase
     if reporter_cls is HtmlReporter and template_path:
         reporter = HtmlReporter(template_path=template_path)
     else:

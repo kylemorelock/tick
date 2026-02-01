@@ -258,12 +258,12 @@ def run_command(
                         break
                     progress.stop()
                     can_go_back = engine.state.current_index > 0
-                    result, notes, evidence_iter = ask_item_response(
+                    item_result, notes, evidence_iter = ask_item_response(
                         current, console, can_go_back=can_go_back
                     )
 
                     # Handle back navigation
-                    if result is None:
+                    if item_result is None:
                         engine.go_back()
                         engine.save()  # Save after going back
                         idx = engine.state.current_index
@@ -279,7 +279,7 @@ def run_command(
                     progress.start()
                     engine.record_response(
                         item=current.item,
-                        result=result,
+                        result=item_result,
                         notes=notes,
                         evidence=evidence_list,
                         matrix_context=current.matrix_context,
