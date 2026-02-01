@@ -1,10 +1,10 @@
-# tick
+# tick ✅
 
 tick is a CLI tool for QA engineers to execute configurable testing checklists. It reads
 YAML checklists, guides users through each item, records responses, and generates reports
 that are ready to share.
 
-## Quick start
+## 🚀 Quick start
 
 ```bash
 uv sync
@@ -27,7 +27,7 @@ uv run tick run my-checklist.yaml --output-dir ./reports
 uv run tick report ./reports/session-<id>.json --format html
 ```
 
-## Why tick
+## ✨ Why tick
 
 - Guides QA runs with a friendly interactive TUI (pass/fail/skip/na).
 - Supports variables, conditions, and matrix expansions for dynamic checklists.
@@ -36,13 +36,13 @@ uv run tick report ./reports/session-<id>.json --format html
 - Generates HTML, Markdown, or JSON reports.
 - Ships with built-in checklist templates.
 
-## Core concepts
+## 📚 Core concepts
 
 - **Checklist**: A YAML file describing sections, items, and optional variables.
 - **Session**: A JSON record of a run (responses, variables, timestamps).
 - **Report**: A rendered view of a session (HTML/Markdown/JSON).
 
-## CLI reference
+## 💻 CLI reference
 
 All commands support `--help`. Options below reflect the current CLI.
 
@@ -60,11 +60,18 @@ Options:
 - `--no-interactive`: Run without prompts (uses answers file and defaults).
 - `--answers`: Path to answers YAML (used with `--no-interactive`).
 - `--resume`: Resume the most recent in-progress session for this checklist.
+- `--verbose`, `-v`: Enable verbose logging to stderr for debugging.
+- `--dry-run`: Preview which items would be included without starting a session.
 
 Notes:
 - `--resume` cannot be combined with `--no-interactive` or `--answers`.
+- `--dry-run` cannot be combined with `--resume`.
 - If `--no-interactive` is used and a required variable is missing, the run fails.
 - Unanswered items in non-interactive mode default to `skip`.
+- In interactive mode, progress is auto-saved after each response, so you can safely
+  interrupt with Ctrl+C and resume later with `--resume`.
+- In interactive mode, type `back` or `b` to return to the previous item and change
+  your response.
 
 ### `tick validate`
 
@@ -91,6 +98,7 @@ Options:
 - `--checklist`: Path to checklist YAML (required if session lacks a saved path).
 - `--output`, `-o`: Output file path (defaults to session path with new extension).
 - `--overwrite`: Overwrite existing output file.
+- `--template`: Path to a custom Jinja2 template (HTML format only).
 
 ### `tick init`
 
@@ -113,7 +121,7 @@ List available checklist templates.
 tick templates
 ```
 
-## Checklist schema
+## 📋 Checklist schema
 
 Checklists are YAML files with a top-level `checklist` object.
 See `docs/checklist-schema.md` for the full schema reference.
@@ -150,7 +158,7 @@ Supported fields:
   `evidence_required`, `condition`, `matrix`).
 - `severity` values: `low`, `medium`, `high`, `critical` (defaults to `medium`).
 
-## Conditions and matrices
+## 🔀 Conditions and matrices
 
 Use `condition` to include sections/items only when variable expressions are true.
 Supported expression features include:
@@ -175,7 +183,7 @@ items:
 Each matrix entry becomes a distinct item in the run, with the matrix values shown
 in the prompt and attached to the response.
 
-## Non-interactive runs and answers file
+## 🤖 Non-interactive runs and answers file
 
 Use `--no-interactive` to drive runs from a YAML answers file.
 
@@ -210,7 +218,7 @@ Rules:
 - `evidence` can be a comma-separated string or a list.
 - Unmatched responses are ignored with a warning; missing responses default to `skip`.
 
-## Reports
+## 📊 Reports
 
 `tick report` supports:
 - `html`: rich, shareable report using the built-in template.
@@ -222,7 +230,7 @@ If a session references a checklist outside the session directory, pass `--check
 explicitly.
 The output directory may also include a `session-index.json` to speed listing/resume.
 
-## Built-in templates
+## 📦 Built-in templates
 
 Templates are bundled for quick starts:
 - `web`
@@ -235,7 +243,7 @@ To list them:
 tick templates
 ```
 
-## Project layout
+## 🗂️ Project layout
 
 ```
 src/tick/
@@ -246,7 +254,43 @@ src/tick/
 tests/            # Unit, integration, e2e tests
 ```
 
-## Extending tick
+## 🧪 Development
+
+### Running tests
+
+tick uses pytest with three test tiers:
+
+| Tier | Marker | Purpose | Coverage |
+|------|--------|---------|----------|
+| **Unit** | `@pytest.mark.unit` | Fast, isolated tests | 90% required |
+| **Integration** | `@pytest.mark.integration` | Component boundaries | No gate |
+| **E2E** | `@pytest.mark.e2e` | Full CLI workflows | No gate |
+
+```bash
+# Run unit tests with coverage (default)
+uv run pytest
+
+# Run integration tests
+uv run pytest -m integration --no-cov
+
+# Run e2e tests
+uv run pytest -m e2e --no-cov
+
+# Run all tests
+uv run pytest -m "unit or integration or e2e" --no-cov
+```
+
+Tests are auto-marked based on directory location (`tests/unit/`, `tests/integration/`, `tests/e2e/`).
+
+### Linting and type checking
+
+```bash
+uv run ruff check .
+uv run ruff format --check .
+uv run mypy src/
+```
+
+## 🔧 Extending tick
 
 - Add reporters in `src/tick/adapters/reporters` and register them in
   `src/tick/cli/commands/report.py`.

@@ -302,3 +302,83 @@ def test_run_command_resume_missing(tmp_path: Path):
         ],
     )
     assert result.exit_code == 1
+
+
+def test_run_command_verbose_flag(tmp_path: Path):
+    """Verify --verbose flag is accepted and command completes successfully."""
+    checklist_path = tmp_path / "checklist.yaml"
+    _write_minimal_checklist(checklist_path)
+    output_dir = tmp_path / "reports"
+    answers_path = tmp_path / "answers.yaml"
+    answers_path.write_text(
+        """
+responses:
+  item-1:
+    result: pass
+""".strip(),
+        encoding="utf-8",
+    )
+    runner = CliRunner()
+    result = runner.invoke(
+        app,
+        [
+            "run",
+            str(checklist_path),
+            "--output-dir",
+            str(output_dir),
+            "--no-interactive",
+            "--answers",
+            str(answers_path),
+            "--verbose",
+        ],
+    )
+    assert result.exit_code == 0
+    # Verify session was created
+    session_files = list(output_dir.glob("session-*.json"))
+    assert any(f.name != "session-index.json" for f in session_files)
+
+
+def test_run_command_dry_run(tmp_path: Path):
+    """Verify --dry-run previews items without creating a session."""
+    checklist_path = tmp_path / "checklist.yaml"
+    _write_minimal_checklist(checklist_path)
+    output_dir = tmp_path / "reports"
+    runner = CliRunner()
+    result = runner.invoke(
+        app,
+        [
+            "run",
+            str(checklist_path),
+            "--output-dir",
+            str(output_dir),
+            "--dry-run",
+        ],
+    )
+    assert result.exit_code == 0
+    # Should show checklist info and items
+    assert "Minimal Checklist" in result.stdout
+    assert "Would run" in result.stdout
+    assert "Do the thing" in result.stdout
+    # Should NOT create a session
+    assert not output_dir.exists() or not list(output_dir.glob("session-*.json"))
+
+
+def test_run_command_dry_run_with_resume_fails(tmp_path: Path):
+    """Verify --dry-run cannot be combined with --resume."""
+    checklist_path = tmp_path / "checklist.yaml"
+    _write_minimal_checklist(checklist_path)
+    output_dir = tmp_path / "reports"
+    runner = CliRunner()
+    result = runner.invoke(
+        app,
+        [
+            "run",
+            str(checklist_path),
+            "--output-dir",
+            str(output_dir),
+            "--dry-run",
+            "--resume",
+        ],
+    )
+    assert result.exit_code == 1
+    assert "cannot be combined" in result.stdout.lower()

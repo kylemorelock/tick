@@ -31,6 +31,7 @@ def report_command(
     checklist_path: Path | None,
     output_path: Path | None,
     overwrite: bool,
+    template_path: Path | None = None,
 ) -> None:
     console = Console()
     if session_path.suffix.lower() != ".json":
@@ -106,7 +107,15 @@ def report_command(
         valid_formats = ", ".join(sorted(_REPORTERS.keys()))
         console.print(f"[red]Unsupported format: {format}. Use one of: {valid_formats}.[/red]")
         raise typer.Exit(code=1)
-    reporter = reporter_cls()
+
+    # Handle custom template for HTML reports
+    if template_path and format.lower() != "html":
+        console.print("[yellow]Warning: --template is only used with HTML format.[/yellow]")
+
+    if reporter_cls is HtmlReporter and template_path:
+        reporter = HtmlReporter(template_path=template_path)
+    else:
+        reporter = reporter_cls()
     content = reporter.generate(session, checklist)
 
     if output_path is None:

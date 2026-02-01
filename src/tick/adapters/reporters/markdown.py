@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from tick.adapters.reporters.base import ReporterBase
+from tick.adapters.reporters.stats import compute_stats
 from tick.adapters.reporters.utils import build_items_by_id
 from tick.core.models.checklist import Checklist
 from tick.core.models.session import Session
@@ -18,11 +19,21 @@ class MarkdownReporter(ReporterBase):
 
     def generate(self, session: Session, checklist: Checklist) -> bytes:
         items_by_id = build_items_by_id(checklist)
+        stats = compute_stats(list(session.responses))
+
         lines = [
             f"# {checklist.name}",
             "",
             f"Version: {checklist.version}",
             f"Domain: {checklist.domain}",
+            "",
+            "## Summary",
+            "",
+            f"- **Pass**: {stats['pass']}",
+            f"- **Fail**: {stats['fail']}",
+            f"- **Skip**: {stats['skip']}",
+            f"- **N/A**: {stats['na']}",
+            f"- **Total**: {stats['total']}",
             "",
             "## Results",
             "",

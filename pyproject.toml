@@ -67,11 +67,13 @@ dev = [
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-addopts = "-v -n auto --cov=src/tick --cov-report=term-missing --cov-fail-under=90"
+# Default: run unit tests only with coverage enforcement
+# Use -m "integration" or -m "e2e" to run other test tiers
+addopts = "-v -n auto -m unit --cov=src/tick --cov-report=term-missing --cov-fail-under=90"
 markers = [
-    "unit: Unit tests (fast, isolated)",
-    "integration: Integration tests (slower, real I/O)",
-    "e2e: End-to-end tests (full workflows)",
+    "unit: Unit tests (fast, isolated, coverage required)",
+    "integration: Integration tests (component boundaries, no coverage gate)",
+    "e2e: End-to-end tests (full CLI workflows, no coverage gate)",
 ]
 filterwarnings = [
     "ignore:Benchmarks are automatically disabled.*:pytest_benchmark.logger.PytestBenchmarkWarning",

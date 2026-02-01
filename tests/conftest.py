@@ -9,6 +9,26 @@ from tick.core.models.enums import SessionStatus
 from tick.core.models.session import Session
 
 
+def pytest_collection_modifyitems(items: list[pytest.Item]) -> None:
+    """Automatically add markers based on test location.
+
+    - tests/unit/ -> @pytest.mark.unit
+    - tests/integration/ -> @pytest.mark.integration
+    - tests/e2e/ -> @pytest.mark.e2e
+    """
+    for item in items:
+        path = str(item.fspath)
+        # Skip if already has the marker (manually specified)
+        existing_markers = {m.name for m in item.iter_markers()}
+
+        if "/unit/" in path and "unit" not in existing_markers:
+            item.add_marker(pytest.mark.unit)
+        elif "/integration/" in path and "integration" not in existing_markers:
+            item.add_marker(pytest.mark.integration)
+        elif "/e2e/" in path and "e2e" not in existing_markers:
+            item.add_marker(pytest.mark.e2e)
+
+
 @pytest.fixture
 def minimal_checklist_data() -> dict[str, object]:
     return {

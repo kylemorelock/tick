@@ -19,7 +19,17 @@ class Response(msgspec.Struct, frozen=True, array_like=True):
 
 
 class Session(msgspec.Struct):
-    """Session state - mutable during execution, fast JSON persistence."""
+    """Session state - mutable during execution, fast JSON persistence.
+
+    Note: Session is intentionally mutable (not frozen) because responses
+    accumulate during execution. This avoids expensive deep copies when
+    adding responses. The EngineState class wraps Session and provides
+    immutable progression tracking via current_index.
+
+    Responses are appended in place, and status/completed_at are updated
+    when the session completes. Use encode_session/decode_session for
+    serialization.
+    """
 
     id: str
     checklist_id: str

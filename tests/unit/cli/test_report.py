@@ -467,3 +467,70 @@ def test_report_command_rejects_output_path_directory(tmp_path: Path) -> None:
             overwrite=True,
         )
     assert excinfo.value.exit_code == 1
+
+
+def test_report_command_custom_template(tmp_path: Path) -> None:
+    """Verify --template flag uses a custom Jinja2 template."""
+    checklist_path = tmp_path / "checklist.yaml"
+    _write_minimal_checklist(checklist_path)
+    checklist = ChecklistDocument.from_raw(
+        {
+            "checklist": {
+                "name": "Minimal Checklist",
+                "version": "1.0.0",
+                "domain": "web",
+                "sections": [
+                    {"name": "Basics", "items": [{"id": "item-1", "check": "Do the thing"}]}
+                ],
+            }
+        }
+    ).checklist
+    response = Response(
+        item_id="item-1",
+        result=ItemResult.PASS,
+        answered_at=datetime.now(UTC),
+    )
+    session = Session(
+        id=_session_id(12),
+        checklist_id=checklist.checklist_id,
+        checklist_path=str(checklist_path),
+        checklist_digest=compute_checklist_digest(checklist),
+        started_at=datetime.now(UTC),
+        status=SessionStatus.COMPLETED,
+        variables={},
+        responses=[response],
+    )
+    session_path = tmp_path / f"session-{session.id}.json"
+    session_path.write_bytes(encode_session(session))
+
+    # Create a custom template
+    template_path = tmp_path / "custom-template.j2"
+    template_path.write_text(
+        """<!DOCTYPE html>
+<html>
+<head><title>CUSTOM: {{ checklist.name }}</title></head>
+<body>
+<h1>CUSTOM REPORT</h1>
+<p>Total items: {{ stats.total }}</p>
+{% for row in rows %}
+<div>{{ row.id }}: {{ row.result }}</div>
+{% endfor %}
+</body>
+</html>""",
+        encoding="utf-8",
+    )
+
+    output_path = tmp_path / "report.html"
+    report_command(
+        session_path=session_path,
+        format="html",
+        checklist_path=checklist_path,
+        output_path=output_path,
+        overwrite=False,
+        template_path=template_path,
+    )
+    assert output_path.exists()
+    content = output_path.read_text(encoding="utf-8")
+    assert "CUSTOM REPORT" in content
+    assert "CUSTOM: Minimal Checklist" in content
+    assert "Total items: 1" in content

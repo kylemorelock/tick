@@ -6,7 +6,8 @@ env:
   UV_SYSTEM_PYTHON: 1
 
 jobs:
-  test:
+  unit-tests:
+    name: Unit Tests (Python ${{ matrix.python-version }})
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -17,8 +18,34 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
       - run: uv sync
-      - name: Run tests (parallel, randomized)
-        run: uv run pytest -n auto -p randomly --randomly-seed=${{ github.run_id }} --cov --cov-fail-under=90
+      - name: Run unit tests with coverage
+        run: uv run pytest -m unit -n auto -p randomly --randomly-seed=${{ github.run_id }} --cov --cov-fail-under=90
+
+  integration-tests:
+    name: Integration Tests
+    needs: unit-tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v4
+        with:
+          python-version: "3.13"
+      - run: uv sync
+      - name: Run integration tests
+        run: uv run pytest -m integration -n auto -p randomly --randomly-seed=${{ github.run_id }} --no-cov
+
+  e2e-tests:
+    name: E2E Tests
+    needs: unit-tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v4
+        with:
+          python-version: "3.13"
+      - run: uv sync
+      - name: Run e2e tests
+        run: uv run pytest -m e2e -n auto -p randomly --randomly-seed=${{ github.run_id }} --no-cov
 
   lint:
     runs-on: ubuntu-latest

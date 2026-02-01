@@ -14,7 +14,13 @@ uv sync
 uv run tick --help
 uv run tick run my-checklist.yaml --output-dir ./reports
 uv run tick report ./reports/session-<id>.json --format html
+
+# Run tests (unit tests with 90% coverage gate)
 uv run pytest
+
+# Run integration or e2e tests separately
+uv run pytest -m integration --no-cov
+uv run pytest -m e2e --no-cov
 ```
 
 ## Architecture at a glance
@@ -49,6 +55,33 @@ uv run pytest
 
 ## Tests
 
+Three test tiers, auto-marked by directory location:
+
+- `tests/unit/` → `@pytest.mark.unit` — Fast, isolated tests. **90% coverage required.**
+- `tests/integration/` → `@pytest.mark.integration` — Component boundaries (loader+models, engine+storage, reporters).
+- `tests/e2e/` → `@pytest.mark.e2e` — Full CLI workflows with CliRunner.
+
+### Running tests
+
+```bash
+# Default: unit tests with coverage gate
+uv run pytest
+
+# Integration tests (no coverage gate)
+uv run pytest -m integration --no-cov
+
+# E2E tests (no coverage gate)
+uv run pytest -m e2e --no-cov
+
+# All tests without coverage
+uv run pytest -m "unit or integration or e2e" --no-cov
+```
+
+### Test patterns
+
 - Use `tmp_path` for file IO.
-- Prefer fixtures for checklists/sessions.
+- Prefer fixtures for checklists/sessions (see `tests/conftest.py`).
 - Assert exit codes for CLI failure paths.
+- For interactive CLI tests, patch `run_module.ask_variables` and `run_module.ask_item_response`.
+- Integration tests use real implementations (no mocking of internal components).
+- E2E tests use `CliRunner` from typer.testing.

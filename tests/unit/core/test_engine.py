@@ -138,3 +138,28 @@ def test_engine_save_persists_session(minimal_checklist):
     engine.start(minimal_checklist, variables={}, checklist_path="checklist.yaml")
     engine.save()
     assert storage.saved is not None
+
+
+def test_engine_go_back_returns_to_previous_item(minimal_checklist):
+    """Verify go_back() returns to previous item and removes response."""
+    storage = DummyStorage()
+    engine = ExecutionEngine(loader=DummyLoader(), storage=storage)
+    engine.start(minimal_checklist, variables={}, checklist_path="checklist.yaml")
+
+    # Record a response
+    current = engine.current_item
+    engine.record_response(
+        item=current.item,
+        result=ItemResult.PASS,
+        notes="test",
+        evidence=None,
+        matrix_context=None,
+    )
+    assert engine.state.current_index == 1
+    assert len(engine.state.session.responses) == 1
+
+    # Go back
+    engine.go_back()
+    assert engine.state.current_index == 0
+    assert len(engine.state.session.responses) == 0
+    assert engine.current_item is not None

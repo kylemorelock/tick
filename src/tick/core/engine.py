@@ -5,12 +5,16 @@ from collections.abc import Iterable, Mapping
 from datetime import UTC, datetime
 from uuid import uuid4
 
+import structlog
+
 from tick.core.models.checklist import Checklist, ChecklistItem
 from tick.core.models.enums import ItemResult, SessionStatus
 from tick.core.models.session import Response, Session
 from tick.core.protocols import ChecklistLoader, SessionStorage
 from tick.core.state import EngineState, ResolvedItem
 from tick.core.utils import ensure_session_digest, matrix_key, validate_session_digest
+
+log: structlog.stdlib.BoundLogger = structlog.get_logger(__name__)
 
 
 def _safe_eval_condition(condition: str, variables: Mapping[str, object]) -> bool:
@@ -145,6 +149,12 @@ class ExecutionEngine:
         ensure_session_digest(session, checklist)
         items = _expand_items(checklist, variables)
         self._state = EngineState(checklist=checklist, session=session, items=items)
+        log.info(
+            "session_started",
+            session_id=session.id,
+            checklist_id=checklist.checklist_id,
+            total_items=len(items),
+        )
 
     def resume(self, checklist: Checklist, session: Session) -> None:
         validate_session_digest(session, checklist)
@@ -164,6 +174,12 @@ class ExecutionEngine:
             items=items,
             current_index=current_index,
         )
+        log.info(
+            "session_resumed",
+            session_id=session.id,
+            completed=current_index,
+            total=len(items),
+        )
 
     def record_response(
         self,
@@ -182,9 +198,30 @@ class ExecutionEngine:
             matrix_context=matrix_context,
         )
         self._state = self.state.with_response(response)
+        log.debug(
+            "response_recorded",
+            item_id=item.id,
+            result=result.value,
+            progress=f"{self.state.current_index}/{len(self.state.items)}",
+        )
+
+    def go_back(self) -> None:
+        """Go back to the previous item, removing the last response."""
+        self._state = self.state.with_back()
+        log.debug(
+            "went_back",
+            current_index=self.state.current_index,
+            progress=f"{self.state.current_index}/{len(self.state.items)}",
+        )
 
     def complete(self) -> None:
         self._state = self.state.with_completed()
+        log.info(
+            "session_completed",
+            session_id=self.state.session.id,
+            total_responses=len(self.state.session.responses),
+        )
 
     def save(self) -> None:
         self._storage.save(self.state.session)
+        log.debug("session_saved", session_id=self.state.session.id)

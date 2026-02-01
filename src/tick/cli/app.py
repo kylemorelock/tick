@@ -19,15 +19,20 @@ def run(
     no_interactive: bool = typer.Option(False, "--no-interactive"),
     answers: Path | None = typer.Option(None, "--answers", exists=True, readable=True),
     resume: bool = typer.Option(False, "--resume"),
+    verbose: bool = typer.Option(False, "--verbose", "-v", help="Enable verbose logging"),
+    dry_run: bool = typer.Option(False, "--dry-run", help="Preview items without starting"),
 ) -> None:
     from tick.cli.commands.run import run_command
+    from tick.logging import configure_logging
 
+    configure_logging(verbose=verbose)
     run_command(
         checklist=checklist,
         output_dir=output_dir,
         no_interactive=no_interactive,
         answers=answers,
         resume=resume,
+        dry_run=dry_run,
     )
 
 
@@ -45,6 +50,13 @@ def report(
     checklist: Path | None = typer.Option(None, "--checklist"),
     output: Path | None = typer.Option(None, "--output", "-o"),
     overwrite: bool = typer.Option(False, "--overwrite"),
+    template: Path | None = typer.Option(
+        None,
+        "--template",
+        exists=True,
+        readable=True,
+        help="Custom Jinja2 template for HTML reports",
+    ),
 ) -> None:
     from tick.cli.commands.report import report_command
 
@@ -54,6 +66,7 @@ def report(
         checklist_path=checklist,
         output_path=output,
         overwrite=overwrite,
+        template_path=template,
     )
 
 

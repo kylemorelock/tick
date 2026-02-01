@@ -5,6 +5,7 @@ from collections.abc import Mapping
 from pathlib import Path
 from typing import Any
 
+import structlog
 import typer
 from rich.console import Console
 from rich.progress import Progress
@@ -19,6 +20,8 @@ from tick.core.engine import ExecutionEngine
 from tick.core.models.checklist import ChecklistVariable
 from tick.core.models.enums import ItemResult
 from tick.core.utils import ensure_session_digest, matrix_key, normalize_evidence
+
+log: structlog.stdlib.BoundLogger = structlog.get_logger(__name__)
 
 
 def _load_answers(path: Path | None) -> dict[str, Any]:
@@ -108,17 +111,53 @@ def run_command(
     no_interactive: bool,
     answers: Path | None,
     resume: bool,
+    dry_run: bool = False,
 ) -> None:
     console = Console()
+    log.debug("run_command_start", checklist=str(checklist), output_dir=str(output_dir))
     if resume and (answers or no_interactive):
         console.print("[red]Resume cannot be combined with --answers or --no-interactive.[/red]")
+        raise typer.Exit(code=1)
+    if dry_run and resume:
+        console.print("[red]Dry-run cannot be combined with --resume.[/red]")
         raise typer.Exit(code=1)
     loader = YamlChecklistLoader()
     try:
         checklist_model = loader.load(checklist)
+        log.debug("checklist_loaded", checklist_id=checklist_model.checklist_id)
     except (OSError, ValueError) as exc:
+        log.error("checklist_load_failed", error=str(exc))
         console.print(f"[red]Failed to load checklist: {exc}[/red]")
         raise typer.Exit(code=1) from exc
+
+    # Handle dry-run mode early
+    if dry_run:
+        from tick.core.engine import _expand_items
+
+        try:
+            answers_data = _load_answers(answers)
+        except ValueError as exc:
+            console.print(f"[red]{exc}[/red]")
+            raise typer.Exit(code=1) from exc
+
+        variables_data = answers_data.get("variables", {})
+        if not isinstance(variables_data, dict):
+            variables_data = {}
+        resolved_vars, errors = _resolve_variables(variables_data, checklist_model.variables)
+        if errors:
+            for error in errors:
+                console.print(f"[yellow]Warning: {error}[/yellow]")
+            # Continue with available variables for preview
+
+        items = _expand_items(checklist_model, resolved_vars)
+        console.print(f"[bold]Checklist: {checklist_model.name}[/bold]")
+        console.print(f"Version: {checklist_model.version}")
+        console.print(f"Domain: {checklist_model.domain}")
+        console.print()
+        console.print(f"[bold]Would run {len(items)} items:[/bold]")
+        for item in items:
+            console.print(f"  - [{item.item.severity.value}] {item.display_check}")
+        raise typer.Exit(0)
 
     try:
         _ensure_output_dir(output_dir)
@@ -171,6 +210,7 @@ def run_command(
             except ValueError:
                 checklist_path_value = str(checklist_resolved)
             engine.start(checklist_model, variables, checklist_path_value)
+            engine.save()  # Save immediately so session exists for resume
         except ValueError as exc:
             console.print(f"[red]{exc}[/red]")
             raise typer.Exit(code=1) from exc
@@ -209,29 +249,56 @@ def run_command(
             )
             console.print(msg)
     else:
-        with Progress(console=console) as progress:
-            task = progress.add_task(f"Checklist progress (0/{total})", total=total)
-            while engine.current_item is not None:
-                current = engine.current_item
-                if current is None:
-                    break
-                progress.stop()
-                result, notes, evidence_iter = ask_item_response(current, console)
-                evidence_list: list[str] | None = list(evidence_iter) if evidence_iter else None
-                progress.start()
-                engine.record_response(
-                    item=current.item,
-                    result=result,
-                    notes=notes,
-                    evidence=evidence_list,
-                    matrix_context=current.matrix_context,
-                )
-                progress.advance(task)
-                progress.update(
-                    task,
-                    description=f"Checklist progress ({engine.state.current_index}/{total})",
-                )
-        engine.complete()
+        try:
+            with Progress(console=console) as progress:
+                task = progress.add_task(f"Checklist progress (0/{total})", total=total)
+                while engine.current_item is not None:
+                    current = engine.current_item
+                    if current is None:
+                        break
+                    progress.stop()
+                    can_go_back = engine.state.current_index > 0
+                    result, notes, evidence_iter = ask_item_response(
+                        current, console, can_go_back=can_go_back
+                    )
+
+                    # Handle back navigation
+                    if result is None:
+                        engine.go_back()
+                        engine.save()  # Save after going back
+                        idx = engine.state.current_index
+                        progress.update(
+                            task,
+                            completed=idx,
+                            description=f"Checklist progress ({idx}/{total})",
+                        )
+                        progress.start()  # Restart progress before continuing loop
+                        continue
+
+                    evidence_list: list[str] | None = list(evidence_iter) if evidence_iter else None
+                    progress.start()
+                    engine.record_response(
+                        item=current.item,
+                        result=result,
+                        notes=notes,
+                        evidence=evidence_list,
+                        matrix_context=current.matrix_context,
+                    )
+                    engine.save()  # Auto-save after each response
+                    progress.advance(task)
+                    progress.update(
+                        task,
+                        description=f"Checklist progress ({engine.state.current_index}/{total})",
+                    )
+            engine.complete()
+        except KeyboardInterrupt:
+            # Session already auto-saved after last response
+            completed = len(engine.state.session.responses)
+            console.print(
+                f"\n[yellow]Interrupted. Session saved with {completed}/{total} responses.[/yellow]"
+            )
+            console.print("[yellow]Resume later with --resume[/yellow]")
+            raise typer.Exit(0) from None
 
     session_path = store.save(engine.state.session)
     console.print(f"[green]Session saved to {session_path}[/green]")
