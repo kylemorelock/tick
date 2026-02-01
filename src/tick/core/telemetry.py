@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+from collections.abc import Generator
 import sys
 from contextlib import contextmanager
 from pathlib import Path
@@ -124,7 +125,7 @@ def get_telemetry_state() -> TelemetryState:
 
 
 @contextmanager
-def telemetry_context(command: str):
+def telemetry_context(command: str) -> Generator[None, None, None]:
     start = perf_counter()
     try:
         yield

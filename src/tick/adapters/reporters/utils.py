@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+from collections.abc import Mapping
+from typing import cast
+
 from tick.core.engine import _expand_items
 from tick.core.models.checklist import Checklist, ChecklistItem
 from tick.core.models.session import Response, Session
@@ -23,10 +26,10 @@ def build_ordered_responses(checklist: Checklist, session: Session) -> list[Resp
                 continue
             item_id = str(entry.get("item_id", ""))
             matrix_context = entry.get("matrix_context")
-            key = (item_id, matrix_key(matrix_context))
-            response = response_map.get(key)
-            if response:
-                ordered.append(response)
+            key = (item_id, matrix_key(cast(Mapping[str, object] | None, matrix_context)))
+            resp = response_map.get(key)
+            if resp is not None:
+                ordered.append(resp)
                 used_keys.add(key)
         if ordered:
             for response in session.responses:
@@ -45,9 +48,9 @@ def build_ordered_responses(checklist: Checklist, session: Session) -> list[Resp
         used_keys = set()
         for item in resolved:
             key = (item.item.id, matrix_key(item.matrix_context))
-            response = response_map.get(key)
-            if response:
-                ordered.append(response)
+            resp = response_map.get(key)
+            if resp is not None:
+                ordered.append(resp)
                 used_keys.add(key)
         if ordered:
             for response in session.responses:
