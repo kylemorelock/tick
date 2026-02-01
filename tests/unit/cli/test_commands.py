@@ -3,6 +3,7 @@ from __future__ import annotations
 from datetime import UTC, datetime
 from pathlib import Path
 
+import pytest
 from typer.testing import CliRunner
 
 from tick.adapters.storage.session_store import SessionStore
@@ -73,6 +74,42 @@ def test_templates_command_lists(tmp_path: Path):
     result = runner.invoke(app, ["templates"])
     assert result.exit_code == 0
     assert "web" in result.stdout
+
+
+def test_info_command_outputs_version():
+    runner = CliRunner()
+    result = runner.invoke(app, ["info"])
+    assert result.exit_code == 0
+    assert "tick version" in result.stdout
+
+
+def test_cache_commands(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
+    monkeypatch.setenv("TICK_CACHE_DIR", str(tmp_path))
+    runner = CliRunner()
+
+    result = runner.invoke(app, ["cache", "info"])
+    assert result.exit_code == 0
+    assert "Cache directory" in result.stdout
+
+    result = runner.invoke(app, ["cache", "clean"])
+    assert result.exit_code == 0
+
+    result = runner.invoke(app, ["cache", "prune", "--days", "1"])
+    assert result.exit_code == 0
+
+
+def test_telemetry_commands(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
+    monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path))
+    runner = CliRunner()
+
+    result = runner.invoke(app, ["telemetry", "status"])
+    assert result.exit_code == 0
+
+    result = runner.invoke(app, ["telemetry", "enable"])
+    assert result.exit_code == 0
+
+    result = runner.invoke(app, ["telemetry", "disable"])
+    assert result.exit_code == 0
 
 
 def test_init_command_writes_file(tmp_path: Path):

@@ -7,12 +7,18 @@ from uuid import uuid4
 
 import structlog
 
+from tick.core.cache import ChecklistCache
 from tick.core.models.checklist import Checklist, ChecklistItem
 from tick.core.models.enums import ItemResult, SessionStatus
 from tick.core.models.session import Response, Session
 from tick.core.protocols import ChecklistLoader, SessionStorage
 from tick.core.state import EngineState, ResolvedItem
-from tick.core.utils import ensure_session_digest, matrix_key, validate_session_digest
+from tick.core.utils import (
+    build_resolved_items_payload,
+    ensure_session_digest,
+    matrix_key,
+    validate_session_digest,
+)
 
 log: structlog.stdlib.BoundLogger = structlog.get_logger(__name__)
 
@@ -115,12 +121,30 @@ def _expand_items(
     return tuple(resolved)
 
 
+def _expand_items_cached(
+    checklist: Checklist,
+    variables: Mapping[str, object],
+    cache: ChecklistCache | None,
+) -> tuple[ResolvedItem, ...]:
+    if cache is None:
+        return _expand_items(checklist, variables)
+    cached = cache.read_expansion(checklist, variables)
+    if cached is not None:
+        return cached
+    items = _expand_items(checklist, variables)
+    cache.write_expansion(checklist, variables, items)
+    return items
+
+
 class ExecutionEngine:
     """Drives checklist execution with explicit state transitions."""
 
-    def __init__(self, loader: ChecklistLoader, storage: SessionStorage):
+    def __init__(
+        self, loader: ChecklistLoader, storage: SessionStorage, cache: ChecklistCache | None = None
+    ):
         self._loader = loader
         self._storage = storage
+        self._cache = cache
         self._state: EngineState | None = None
 
     @property
@@ -137,6 +161,8 @@ class ExecutionEngine:
         self, checklist: Checklist, variables: Mapping[str, object], checklist_path: str
     ) -> None:
         session_vars = {k: str(v) for k, v in variables.items()}
+        items = _expand_items_cached(checklist, variables, self._cache)
+        resolved_items = build_resolved_items_payload(items)
         session = Session(
             id=uuid4().hex,
             checklist_id=checklist.checklist_id,
@@ -145,9 +171,10 @@ class ExecutionEngine:
             status=SessionStatus.IN_PROGRESS,
             variables=session_vars,
             responses=[],
+            resolved_checklist=checklist.model_dump(),
+            resolved_items=resolved_items,
         )
         ensure_session_digest(session, checklist)
-        items = _expand_items(checklist, variables)
         self._state = EngineState(checklist=checklist, session=session, items=items)
         log.info(
             "session_started",
@@ -158,7 +185,7 @@ class ExecutionEngine:
 
     def resume(self, checklist: Checklist, session: Session) -> None:
         validate_session_digest(session, checklist)
-        items = _expand_items(checklist, session.variables)
+        items = _expand_items_cached(checklist, session.variables, self._cache)
         if len(session.responses) > len(items):
             raise ValueError("Session responses do not match the checklist items.")
         for index, response in enumerate(session.responses):
@@ -168,6 +195,10 @@ class ExecutionEngine:
             if matrix_key(response.matrix_context) != matrix_key(item.matrix_context):
                 raise ValueError("Session responses do not match the checklist items.")
         current_index = len(session.responses)
+        if session.resolved_checklist is None:
+            session.resolved_checklist = checklist.model_dump()
+        if session.resolved_items is None:
+            session.resolved_items = build_resolved_items_payload(items)
         self._state = EngineState(
             checklist=checklist,
             session=session,

@@ -19,9 +19,15 @@ uv sync
 **From PyPI (after first release):**
 
 ```bash
-pip install tick
-# or: uv add tick
+pipx install tick
+# or: uv tool install tick
+# or: pip install tick
 ```
+
+**Single-binary (optional):**
+
+tick is compatible with tools like PyInstaller or PyOxidizer for packaging a standalone
+binary. This is optional and useful for locked-down environments.
 
 ## 🚀 Quick start
 
@@ -81,6 +87,8 @@ Options:
 - `--resume`: Resume the most recent in-progress session for this checklist.
 - `--verbose`, `-v`: Enable verbose logging to stderr for debugging.
 - `--dry-run`: Preview which items would be included without starting a session.
+- `--cache-dir`: Override the cache directory.
+- `--no-cache`: Disable the checklist cache.
 
 Notes:
 - `--resume` cannot be combined with `--no-interactive` or `--answers`.
@@ -102,6 +110,8 @@ tick validate CHECKLIST
 
 Options:
 - `CHECKLIST` (required): Path to checklist YAML.
+- `--cache-dir`: Override the cache directory.
+- `--no-cache`: Disable the checklist cache.
 
 ### `tick report`
 
@@ -138,6 +148,34 @@ List available checklist templates.
 
 ```bash
 tick templates
+```
+
+### `tick info`
+
+Show version, cache, and template information.
+
+```bash
+tick info
+```
+
+### `tick cache`
+
+Manage the checklist cache.
+
+```bash
+tick cache info
+tick cache clean
+tick cache prune --days 30
+```
+
+### `tick telemetry`
+
+Manage opt-in telemetry.
+
+```bash
+tick telemetry enable
+tick telemetry disable
+tick telemetry status
 ```
 
 ## 📋 Checklist schema
@@ -315,6 +353,17 @@ uv run mypy src/
   `src/tick/cli/commands/report.py`.
 - Add new checklist loaders by implementing `ChecklistLoader` from
   `src/tick/core/protocols.py`.
+
+## Telemetry (opt-in)
+
+tick includes optional, privacy-first telemetry. It is disabled by default and only
+stores local usage counts and duration buckets (no checklist contents, paths, or PII).
+
+```bash
+tick telemetry enable
+tick telemetry disable
+tick telemetry status
+```
 
 ## License
 

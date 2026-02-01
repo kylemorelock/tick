@@ -7,3 +7,6 @@ Start here:
 
 - `getting-started.md` for setup and core workflows
 - `extending.md` for adding new reporters and loaders
+- `performance.md` for benchmark harness and budgets
+- `releasing.md` for the release checklist
+- `telemetry.md` for opt-in telemetry details

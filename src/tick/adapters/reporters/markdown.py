@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from tick.adapters.reporters.base import ReporterBase
 from tick.adapters.reporters.stats import compute_stats
-from tick.adapters.reporters.utils import build_items_by_id
+from tick.adapters.reporters.utils import build_items_by_id, build_ordered_responses
 from tick.core.models.checklist import Checklist
 from tick.core.models.session import Session
 
@@ -41,7 +41,8 @@ class MarkdownReporter(ReporterBase):
             "| --- | --- | --- | --- | --- |",
         ]
 
-        for response in session.responses:
+        ordered_responses = build_ordered_responses(checklist, session)
+        for response in ordered_responses:
             item = items_by_id.get(response.item_id)
             check = item.check if item else response.item_id
             severity = item.severity.value if item else "unknown"

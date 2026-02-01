@@ -112,16 +112,21 @@ def run_command(
     answers: Path | None,
     resume: bool,
     dry_run: bool = False,
+    cache_dir: Path | None = None,
+    no_cache: bool = False,
 ) -> None:
     console = Console()
     log.debug("run_command_start", checklist=str(checklist), output_dir=str(output_dir))
+    from tick.core.cache import ChecklistCache
+
+    cache = None if no_cache else ChecklistCache(cache_dir)
     if resume and (answers or no_interactive):
         console.print("[red]Resume cannot be combined with --answers or --no-interactive.[/red]")
         raise typer.Exit(code=1)
     if dry_run and resume:
         console.print("[red]Dry-run cannot be combined with --resume.[/red]")
         raise typer.Exit(code=1)
-    loader = YamlChecklistLoader()
+    loader = YamlChecklistLoader(cache=cache)
     try:
         checklist_model = loader.load(checklist)
         log.debug("checklist_loaded", checklist_id=checklist_model.checklist_id)
@@ -132,7 +137,7 @@ def run_command(
 
     # Handle dry-run mode early
     if dry_run:
-        from tick.core.engine import _expand_items
+        from tick.core.engine import _expand_items_cached
 
         try:
             answers_data = _load_answers(answers)
@@ -149,7 +154,7 @@ def run_command(
                 console.print(f"[yellow]Warning: {error}[/yellow]")
             # Continue with available variables for preview
 
-        items = _expand_items(checklist_model, resolved_vars)
+        items = _expand_items_cached(checklist_model, resolved_vars, cache)
         console.print(f"[bold]Checklist: {checklist_model.name}[/bold]")
         console.print(f"Version: {checklist_model.version}")
         console.print(f"Domain: {checklist_model.domain}")
@@ -165,7 +170,7 @@ def run_command(
         console.print(f"[red]{exc}[/red]")
         raise typer.Exit(code=1) from exc
     store = SessionStore(output_dir)
-    engine = ExecutionEngine(loader=loader, storage=store)
+    engine = ExecutionEngine(loader=loader, storage=store, cache=cache)
 
     try:
         answers_data = _load_answers(answers)
@@ -219,27 +224,34 @@ def run_command(
     response_map = _normalize_responses(answers_data)
 
     if no_interactive:
-        for item_resolved in engine.state.items[engine.state.current_index :]:
-            entry = None
-            if response_map.get(item_resolved.item.id):
-                if item_resolved.matrix_context:
-                    target = matrix_key(item_resolved.matrix_context)
-                    for idx, candidate in enumerate(response_map[item_resolved.item.id]):
-                        if matrix_key(candidate.get("matrix")) == target:
-                            entry = response_map[item_resolved.item.id].pop(idx)
-                            break
-                else:
-                    entry = response_map[item_resolved.item.id].pop(0)
-            result = _parse_result(entry.get("result") if entry else None)
-            notes = entry.get("notes") if entry else None
-            evidence = normalize_evidence(entry.get("evidence") if entry else None)
-            engine.record_response(
-                item=item_resolved.item,
-                result=result,
-                notes=notes,
-                evidence=evidence or None,
-                matrix_context=item_resolved.matrix_context,
-            )
+        with Progress(console=console) as progress:
+            task = progress.add_task(f"Checklist progress (0/{total})", total=total)
+            for item_resolved in engine.state.items[engine.state.current_index :]:
+                entry = None
+                if response_map.get(item_resolved.item.id):
+                    if item_resolved.matrix_context:
+                        target = matrix_key(item_resolved.matrix_context)
+                        for idx, candidate in enumerate(response_map[item_resolved.item.id]):
+                            if matrix_key(candidate.get("matrix")) == target:
+                                entry = response_map[item_resolved.item.id].pop(idx)
+                                break
+                    else:
+                        entry = response_map[item_resolved.item.id].pop(0)
+                result = _parse_result(entry.get("result") if entry else None)
+                notes = entry.get("notes") if entry else None
+                evidence = normalize_evidence(entry.get("evidence") if entry else None)
+                engine.record_response(
+                    item=item_resolved.item,
+                    result=result,
+                    notes=notes,
+                    evidence=evidence or None,
+                    matrix_context=item_resolved.matrix_context,
+                )
+                progress.advance(task)
+                progress.update(
+                    task,
+                    description=f"Checklist progress ({engine.state.current_index}/{total})",
+                )
         engine.complete()
         unused = sum(len(entries) for entries in response_map.values())
         if unused:

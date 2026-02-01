@@ -8,6 +8,8 @@ from tick.adapters.reporters.html import HtmlReporter
 from tick.adapters.reporters.json import JsonReporter
 from tick.adapters.reporters.markdown import MarkdownReporter
 from tick.adapters.reporters.stats import compute_stats
+from tick.adapters.reporters.utils import build_ordered_responses
+from tick.core.models.checklist import ChecklistDocument
 from tick.core.models.enums import ItemResult, SessionStatus
 from tick.core.models.session import Response, Session
 
@@ -187,3 +189,72 @@ def test_json_reporter_includes_stats(minimal_checklist):
     assert decoded["stats"]["skip"] == 1
     assert decoded["stats"]["na"] == 1
     assert decoded["stats"]["total"] == 5
+
+
+def test_ordered_responses_append_unmatched(minimal_checklist):
+    responses = [
+        Response(item_id="item-1", result=ItemResult.PASS, answered_at=datetime.now(UTC)),
+        Response(item_id="extra-1", result=ItemResult.FAIL, answered_at=datetime.now(UTC)),
+    ]
+    session = Session(
+        id="session-order",
+        checklist_id=minimal_checklist.checklist_id,
+        checklist_path=None,
+        started_at=datetime.now(UTC),
+        status=SessionStatus.COMPLETED,
+        responses=responses,
+        variables={},
+    )
+    ordered = build_ordered_responses(minimal_checklist, session)
+    assert [response.item_id for response in ordered] == ["item-1", "extra-1"]
+
+
+def test_ordered_responses_respects_resolved_items():
+    raw = {
+        "checklist": {
+            "name": "Order Checklist",
+            "version": "1.0.0",
+            "domain": "web",
+            "sections": [
+                {
+                    "name": "Basics",
+                    "items": [
+                        {"id": "item-1", "check": "First"},
+                        {"id": "item-2", "check": "Second"},
+                    ],
+                }
+            ],
+        }
+    }
+    checklist = ChecklistDocument.from_raw(raw).checklist
+    responses = [
+        Response(item_id="item-1", result=ItemResult.PASS, answered_at=datetime.now(UTC)),
+        Response(item_id="item-2", result=ItemResult.FAIL, answered_at=datetime.now(UTC)),
+    ]
+    session = Session(
+        id="session-resolved",
+        checklist_id=checklist.checklist_id,
+        checklist_path=None,
+        started_at=datetime.now(UTC),
+        status=SessionStatus.COMPLETED,
+        responses=responses,
+        variables={},
+        resolved_items=[
+            {
+                "section_name": "Basics",
+                "item_id": "item-2",
+                "check": "Second",
+                "severity": "medium",
+                "matrix_context": None,
+            },
+            {
+                "section_name": "Basics",
+                "item_id": "item-1",
+                "check": "First",
+                "severity": "medium",
+                "matrix_context": None,
+            },
+        ],
+    )
+    ordered = build_ordered_responses(checklist, session)
+    assert [response.item_id for response in ordered][:2] == ["item-2", "item-1"]
