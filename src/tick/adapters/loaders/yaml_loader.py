@@ -49,7 +49,10 @@ class YamlChecklistLoader:
         if self._cache and fingerprint:
             cached = self._cache.read_checklist_entry(fingerprint)
             if cached is not None:
-                return [ValidationIssue(path=issue.path, message=issue.message) for issue in cached.issues]
+                return [
+                    ValidationIssue(path=issue.path, message=issue.message)
+                    for issue in cached.issues
+                ]
         raw = self._parse_bytes(data)
         issues = self._validate_raw(raw)
         if self._cache and fingerprint:
@@ -69,9 +72,7 @@ class YamlChecklistLoader:
                 document = ChecklistDocument.from_raw(cached.raw)
                 return document.checklist
             if cached is not None and cached.issues:
-                formatted = "; ".join(
-                    f"{issue.path}: {issue.message}" for issue in cached.issues
-                )
+                formatted = "; ".join(f"{issue.path}: {issue.message}" for issue in cached.issues)
                 raise ValueError(f"Checklist validation failed: {formatted}")
         raw = self._parse_bytes(data)
         issues = self._validate_raw(raw)

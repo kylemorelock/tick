@@ -28,20 +28,18 @@ def normalize_evidence(raw: object) -> list[str]:
 
 
 def build_resolved_items_payload(items: Iterable[ResolvedItem]) -> list[dict[str, object]]:
-    payload: list[dict[str, object]] = []
-    for resolved in items:
-        payload.append(
-            {
-                "section_name": resolved.section_name,
-                "item_id": resolved.item.id,
-                "check": resolved.item.check,
-                "severity": resolved.item.severity.value,
-                "guidance": resolved.item.guidance,
-                "evidence_required": resolved.item.evidence_required,
-                "matrix_context": resolved.matrix_context,
-            }
-        )
-    return payload
+    return [
+        {
+            "section_name": resolved.section_name,
+            "item_id": resolved.item.id,
+            "check": resolved.item.check,
+            "severity": resolved.item.severity.value,
+            "guidance": resolved.item.guidance,
+            "evidence_required": resolved.item.evidence_required,
+            "matrix_context": resolved.matrix_context,
+        }
+        for resolved in items
+    ]
 
 
 def validate_session_digest(session: Session, checklist: Checklist) -> str:

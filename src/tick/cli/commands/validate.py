@@ -8,7 +8,9 @@ from rich.console import Console
 from tick.adapters.loaders.yaml_loader import YamlChecklistLoader
 
 
-def validate_command(checklist: Path, cache_dir: Path | None = None, no_cache: bool = False) -> None:
+def validate_command(
+    checklist: Path, cache_dir: Path | None = None, no_cache: bool = False
+) -> None:
     console = Console()
     from tick.core.cache import ChecklistCache
 

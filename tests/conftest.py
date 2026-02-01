@@ -124,15 +124,14 @@ def large_checklist_path(tmp_path):
     def build_large_checklist(sections: int = 20, items_per_section: int = 25) -> dict[str, object]:
         checklist_sections = []
         for section_index in range(sections):
-            items = []
-            for item_index in range(items_per_section):
-                items.append(
-                    {
-                        "id": f"sec-{section_index:02d}-item-{item_index:03d}",
-                        "check": f"Check {section_index}-{item_index}",
-                        "severity": "medium",
-                    }
-                )
+            items = [
+                {
+                    "id": f"sec-{section_index:02d}-item-{item_index:03d}",
+                    "check": f"Check {section_index}-{item_index}",
+                    "severity": "medium",
+                }
+                for item_index in range(items_per_section)
+            ]
             checklist_sections.append(
                 {
                     "name": f"Section {section_index}",

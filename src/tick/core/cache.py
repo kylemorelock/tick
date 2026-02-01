@@ -154,9 +154,7 @@ class ChecklistCache:
     ) -> tuple[ResolvedItem, ...] | None:
         checklist_digest = compute_checklist_digest(checklist)
         variables_digest = _variables_digest(variables)
-        signature = hashlib.sha256(
-            f"{checklist_digest}|{variables_digest}".encode()
-        ).hexdigest()
+        signature = hashlib.sha256(f"{checklist_digest}|{variables_digest}".encode()).hexdigest()
         path = self._expansions_dir / f"{signature}.json"
         if not path.exists():
             return None
@@ -187,9 +185,7 @@ class ChecklistCache:
     ) -> None:
         checklist_digest = compute_checklist_digest(checklist)
         variables_digest = _variables_digest(variables)
-        signature = hashlib.sha256(
-            f"{checklist_digest}|{variables_digest}".encode()
-        ).hexdigest()
+        signature = hashlib.sha256(f"{checklist_digest}|{variables_digest}".encode()).hexdigest()
         path = self._expansions_dir / f"{signature}.json"
         entry = ExpansionCacheEntry(
             cache_version=CACHE_VERSION,

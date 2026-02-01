@@ -40,8 +40,18 @@ def _snapshot_session(checklist_id: str) -> Session:
         completed_at=FIXED_TIME,
         status=SessionStatus.COMPLETED,
         responses=[
-            Response(item_id="item-2", result=ItemResult.FAIL, answered_at=FIXED_TIME, notes="oops"),
-            Response(item_id="item-1", result=ItemResult.PASS, answered_at=FIXED_TIME, notes="ok"),
+            Response(
+                item_id="item-2",
+                result=ItemResult.FAIL,
+                answered_at=FIXED_TIME,
+                notes="oops",
+            ),
+            Response(
+                item_id="item-1",
+                result=ItemResult.PASS,
+                answered_at=FIXED_TIME,
+                notes="ok",
+            ),
         ],
         variables={},
     )

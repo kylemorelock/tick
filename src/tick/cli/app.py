@@ -120,7 +120,7 @@ def info() -> None:
 
 @cache_app.command("info")
 def cache_info(
-    cache_dir: Path | None = typer.Option(None, "--cache-dir", help="Override cache directory")
+    cache_dir: Path | None = typer.Option(None, "--cache-dir", help="Override cache directory"),
 ) -> None:
     from tick.cli.commands.cache import cache_info as cache_info_command
     from tick.core.telemetry import telemetry_context
@@ -131,7 +131,7 @@ def cache_info(
 
 @cache_app.command("clean")
 def cache_clean(
-    cache_dir: Path | None = typer.Option(None, "--cache-dir", help="Override cache directory")
+    cache_dir: Path | None = typer.Option(None, "--cache-dir", help="Override cache directory"),
 ) -> None:
     from tick.cli.commands.cache import cache_clean as cache_clean_command
     from tick.core.telemetry import telemetry_context
