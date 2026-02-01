@@ -319,3 +319,4 @@ uv run mypy src/
 ## License
 
 tick is released under the [MIT License](LICENSE).
+ 
